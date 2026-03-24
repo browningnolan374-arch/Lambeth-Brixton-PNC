@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>PNC Login & Dashboard</title>
+<style>
+  body { font-family: sans-serif; background:#f2f2f2; color:#333; margin:0; padding:0;}
+  header { background:#003366; color:white; padding:15px; text-align:center;}
+  nav { background:#0055a5; padding:10px; display:flex; justify-content:center; gap:10px;}
+  nav button { padding:5px 10px; color:white; background:#0077cc; border:none; cursor:pointer;}
+  nav button:hover { background:#0099ff; }
+  main { padding:20px;}
+  table { width:100%; border-collapse:collapse; margin-bottom:15px;}
+  th, td { border:1px solid #ccc; padding:8px; text-align:left;}
+  input { padding:5px; margin-right:5px;}
+  .hidden { display:none; }
+  .error { color:red; margin-top:5px; }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>PNC System</h1>
+</header>
+
+<main id="loginPage">
+  <h2>Login</h2>
+  <input type="text" id="loginUsername" placeholder="Username"><br><br>
+  <input type="password" id="loginPassword" placeholder="Password"><br><br>
+  <button onclick="login()">Login</button>
+  <button onclick="showRegister()">Register</button>
+  <p class="error" id="loginError"></p>
+</main>
+
+<main id="registerPage" class="hidden">
+  <h2>Register</h2>
+  <input type="text" id="regUsername" placeholder="Username"><br><br>
+  <input type="password" id="regPassword" placeholder="Password"><br><br>
+  <button onclick="register()">Create Account</button>
+  <button onclick="showLogin()">Back to Login</button>
+  <p class="error" id="regError"></p>
+</main>
+
+<main id="dashboardPage" class="hidden">
+  <nav>
+    <button onclick="showSection('reports')">Reports</button>
+    <button onclick="showSection('vehicles')">Vehicles</button>
+    <button onclick="showSection('people')">People</button>
+    <button onclick="logout()">Logout</button>
+  </nav>
+
+  <!-- Reports Section -->
+  <section id="reports" class="section">
+    <h2>Reports</h2>
+    <table id="reportsTable">
+      <tr><th>ID</th><th>Description</th></tr>
+    </table>
+    <input type="text" id="reportInput" placeholder="Report description">
+    <button onclick="addReport()">Add Report</button>
+  </section>
+
+  <!-- Vehicles Section -->
+  <section id="vehicles" class="section hidden">
+    <h2>Vehicles</h2>
+    <table id="vehiclesTable">
+      <tr><th>ID</th><th>Vehicle Name</th></tr>
+    </table>
+    <input type="text" id="vehicleInput" placeholder="Vehicle name">
+    <button onclick="addVehicle()">Add Vehicle</button>
+  </section>
+
+  <!-- People Section -->
+  <section id="people" class="section hidden">
+    <h2>People</h2>
+    <table id="peopleTable">
+      <tr><th>ID</th><th>Name</th></tr>
+    </table>
+    <input type="text" id="peopleInput" placeholder="Person name">
+    <button onclick="addPerson()">Add Person</button>
+  </section>
+</main>
+
+<script>
+// ====== Login/Register System ======
+function getUsers() {
+  return JSON.parse(localStorage.getItem('users')) || {};
+}
+
+function saveUsers(users) {
+  localStorage.setItem('users', JSON.stringify(users));
+}
+
+let currentUser = localStorage.getItem('currentUser') || null;
+
+function showLogin() {
+  document.getElementById('loginPage').classList.remove('hidden');
+  document.getElementById('registerPage').classList.add('hidden');
+}
+
+function showRegister() {
+  document.getElementById('loginPage').classList.add('hidden');
+  document.getElementById('registerPage').classList.remove('hidden');
+}
+
+function login() {
+  const username = document.getElementById('loginUsername').value.trim();
+  const password = document.getElementById('loginPassword').value;
+  const users = getUsers();
+  if(users[username] && users[username].password === password) {
+    currentUser = username;
+    localStorage.setItem('currentUser', currentUser);
+    document.getElementById('loginError').innerText = '';
+    openDashboard();
+  } else {
+    document.getElementById('loginError').innerText = 'Invalid username or password';
+  }
+}
+
+function register() {
+  const username = document.getElementById('regUsername').value.trim();
+  const password = document.getElementById('regPassword').value;
+  const users = getUsers();
+  if(!username || !password) {
+    document.getElementById('regError').innerText = 'Enter username & password';
+    return;
+  }
+  if(users[username]) {
+    document.getElementById('regError').innerText = 'Username already exists';
+    return;
+  }
+  users[username] = { password, reports: [], vehicles: [], people: [] };
+  saveUsers(users);
+  document.getElementById('regError').innerText = 'Account created! You can login now.';
+}
+
+// ====== Dashboard ======
+function openDashboard() {
+  document.getElementById('loginPage').classList.add('hidden');
+  document.getElementById('registerPage').classList.add('hidden');
+  document.getElementById('dashboardPage').classList.remove('hidden');
+  loadAllData();
+}
+
+// ====== Logout ======
+function logout() {
+  currentUser = null;
+  localStorage.removeItem('currentUser');
+  showLogin();
+}
+
+// ====== Section Switch ======
+function showSection(name) {
+  document.querySelectorAll('.section').forEach(sec => sec.classList.add('hidden'));
+  document.getElementById(name).classList.remove('hidden');
+}
+
+// ====== LocalStorage Data ======
+function getData(type) {
+  const users = getUsers();
+  if(currentUser && users[currentUser]) return users[currentUser][type];
+  return [];
+}
+
+function saveData(type, data) {
+  const users = getUsers();
+  if(currentUser) {
+    users[currentUser][type] = data;
+    saveUsers(users);
+  }
+}
+
+// ====== Load Tables ======
+function loadReports() {
+  const reports = getData('reports');
+  const table = document.getElementById('reportsTable');
+  table.innerHTML = '<tr><th>ID</th><th>Description</th></tr>';
+  reports.forEach((r,i)=> {
+    const row = table.insertRow();
+    row.insertCell(0).innerText = i+1;
+    row.insertCell(1).innerText = r;
+  });
+}
+function loadVehicles() {
+  const vehicles = getData('vehicles');
+  const table = document.getElementById('vehiclesTable');
+  table.innerHTML = '<tr><th>ID</th><th>Vehicle Name</th></tr>';
+  vehicles.forEach((v,i)=> {
+    const row = table.insertRow();
+    row.insertCell(0).innerText = i+1;
+    row.insertCell(1).innerText = v;
+  });
+}
+function loadPeople() {
+  const people = getData('people');
+  const table = document.getElementById('peopleTable');
+  table.innerHTML = '<tr><th>ID</th><th>Name</th></tr>';
+  people.forEach((p,i)=> {
+    const row = table.insertRow();
+    row.insertCell(0).innerText = i+1;
+    row.insertCell(1).innerText = p;
+  });
+}
+
+function loadAllData() {
+  loadReports();
+  loadVehicles();
+  loadPeople();
+}
+
+// ====== Add Entries ======
+function addReport() {
+  const input = document.getElementById('reportInput');
+  if(!input.value) return;
+  const data = getData('reports');
+  data.push(input.value);
+  saveData('reports', data);
+  input.value = '';
+  loadReports();
+}
+function addVehicle() {
+  const input = document.getElementById('vehicleInput');
+  if(!input.value) return;
+  const data = getData('vehicles');
+  data.push(input.value);
+  saveData('vehicles', data);
+  input.value = '';
+  loadVehicles();
+}
+function addPerson() {
+  const input = document.getElementById('peopleInput');
+  if(!input.value) return;
+  const data = getData('people');
+  data.push(input.value);
+  saveData('people', data);
+  input.value = '';
+  loadPeople();
+}
+
+// ====== Auto-login if user already logged in ======
+if(currentUser) openDashboard();
+</script>
+
+</body>
+</html>
