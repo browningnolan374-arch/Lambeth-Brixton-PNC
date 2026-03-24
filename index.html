@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>MET PNC Dashboard</title>
+<title>Lambeth PNC</title>
 <style>
 body {
   font-family: Arial, sans-serif;
@@ -61,7 +61,7 @@ table { width:100%; border-collapse:collapse; margin-bottom:10px; }
 th, td { padding:8px; text-align:left; border-bottom:1px solid #333; }
 th { background:#0b3d91; }
 
-input, select {
+input, select, textarea {
   padding:5px;
   margin-right:5px;
   margin-top:5px;
@@ -93,14 +93,30 @@ button.editBtn { background:#4caf50; color:white; }
 button.deleteBtn { background:#f44336; color:white; }
 
 .error { color:red; margin-top:5px; }
+#logoutBtn {
+  position:fixed;
+  bottom:20px;
+  right:20px;
+  background:#f44336;
+  padding:10px 15px;
+  border:none;
+  color:white;
+  border-radius:4px;
+  cursor:pointer;
+  font-weight:bold;
+}
 </style>
 </head>
 <body>
 
-<header>MET PNC Dashboard</header>
+<header>Lambeth PNC</header>
 
 <main id="loginPage">
   <h2>Login</h2>
+  <select id="loginType">
+    <option value="MET">MET Officer</option>
+    <option value="Civilian">Civilian</option>
+  </select><br><br>
   <input type="text" id="loginUsername" placeholder="Username"><br><br>
   <input type="password" id="loginPassword" placeholder="Password"><br><br>
   <button onclick="login()">Login</button>
@@ -110,6 +126,10 @@ button.deleteBtn { background:#f44336; color:white; }
 
 <main id="registerPage" class="section">
   <h2>Register</h2>
+  <select id="regType">
+    <option value="MET">MET Officer</option>
+    <option value="Civilian">Civilian</option>
+  </select><br><br>
   <input type="text" id="regUsername" placeholder="Username"><br><br>
   <input type="password" id="regPassword" placeholder="Password"><br><br>
   <button onclick="register()">Create Account</button>
@@ -119,52 +139,118 @@ button.deleteBtn { background:#f44336; color:white; }
 
 <main id="dashboardPage" class="section">
   <nav>
+    <button onclick="showSection('ocs')">OCs</button>
     <button onclick="showSection('reports')">Reports</button>
     <button onclick="showSection('vehicles')">Vehicles</button>
-    <button onclick="showSection('people')">People</button>
-    <button onclick="logout()">Logout</button>
+    <button onclick="showSection('personal')">Personal Info</button>
+    <button onclick="showSection('convictions')">Convictions</button>
+    <button onclick="showSection('arrests')">Arrests</button>
+    <button onclick="showSection('cjprocess')">Criminal Justice</button>
+    <button onclick="showSection('warnings')">Warnings</button>
+    <button onclick="showSection('orders')">Orders</button>
+    <button onclick="showSection('driving')">Driving Info</button>
+    <button onclick="showSection('firearms')">Firearms</button>
   </nav>
 
-  <!-- Reports -->
+  <!-- OC Selection -->
+  <section class="panel">
+    <label>Select OC: <select id="ocSelect" onchange="loadOCData()"></select></label>
+    <button class="addBtn" onclick="createOC()">Add New OC</button>
+  </section>
+
+  <!-- Sections -->
+  <section id="ocs" class="section panel">
+    <h2>OCs</h2>
+    <table id="ocsTable">
+      <tr><th>ID</th><th>Name</th><th>Actions</th></tr>
+    </table>
+  </section>
+
   <section id="reports" class="section panel">
     <h2>Reports</h2>
-    <table id="reportsTable">
-      <tr><th>ID</th><th>Description</th><th>Actions</th></tr>
-    </table>
+    <table id="reportsTable"><tr><th>ID</th><th>Description</th><th>Actions</th></tr></table>
     <input type="text" id="reportInput" placeholder="Report description">
     <button class="addBtn" onclick="addReport()">Add Report</button>
   </section>
 
-  <!-- Vehicles -->
   <section id="vehicles" class="section panel">
     <h2>Vehicles</h2>
-    <table id="vehiclesTable">
-      <tr><th>ID</th><th>Colour</th><th>Plate</th><th>Brand</th><th>Actions</th></tr>
-    </table>
-    <div class="form-group">
-      <input type="text" id="vehicleColour" placeholder="Colour">
-      <input type="text" id="vehiclePlate" placeholder="Plate">
-      <input type="text" id="vehicleBrand" placeholder="Brand">
-      <button class="addBtn" onclick="addVehicle()">Add Vehicle</button>
-    </div>
+    <table id="vehiclesTable"><tr><th>ID</th><th>Colour</th><th>Plate</th><th>Brand</th><th>Actions</th></tr></table>
+    <input type="text" id="vehicleColour" placeholder="Colour">
+    <input type="text" id="vehiclePlate" placeholder="Plate">
+    <input type="text" id="vehicleBrand" placeholder="Brand">
+    <button class="addBtn" onclick="addVehicle()">Add Vehicle</button>
   </section>
 
-  <!-- People -->
-  <section id="people" class="section panel">
-    <h2>People</h2>
-    <table id="peopleTable">
-      <tr><th>ID</th><th>Name</th><th>Actions</th></tr>
-    </table>
-    <input type="text" id="peopleInput" placeholder="Person name">
-    <button class="addBtn" onclick="addPerson()">Add Person</button>
+  <section id="personal" class="section panel">
+    <h2>Personal Info</h2>
+    <label>Name:<input id="piName" type="text"></label><br>
+    <label>DOB:<input id="piDOB" type="date"></label><br>
+    <label>Address:<input id="piAddress" type="text"></label><br>
+    <label>Gender:<input id="piGender" type="text"></label><br>
+    <label>Ethnicity:<input id="piEthnicity" type="text"></label><br>
+    <label>Physical Description:<textarea id="piPhysical"></textarea></label><br>
+    <button class="addBtn" onclick="savePersonalInfo()">Save Personal Info</button>
+  </section>
+
+  <section id="convictions" class="section panel">
+    <h2>Convictions & Cautions</h2>
+    <table id="convictionsTable"><tr><th>ID</th><th>Details</th><th>Actions</th></tr></table>
+    <input type="text" id="convInput" placeholder="Conviction details">
+    <button class="addBtn" onclick="addConviction()">Add</button>
+  </section>
+
+  <section id="arrests" class="section panel">
+    <h2>Arrest Records</h2>
+    <table id="arrestsTable"><tr><th>ID</th><th>Details</th><th>Actions</th></tr></table>
+    <input type="text" id="arrestInput" placeholder="Arrest details">
+    <button class="addBtn" onclick="addArrest()">Add</button>
+  </section>
+
+  <section id="cjprocess" class="section panel">
+    <h2>Criminal Justice Process</h2>
+    <table id="cjTable"><tr><th>ID</th><th>Details</th><th>Actions</th></tr></table>
+    <input type="text" id="cjInput" placeholder="Warrants / Pending Cases">
+    <button class="addBtn" onclick="addCJ()">Add</button>
+  </section>
+
+  <section id="warnings" class="section panel">
+    <h2>Warning Markers</h2>
+    <table id="warningsTable"><tr><th>ID</th><th>Details</th><th>Actions</th></tr></table>
+    <input type="text" id="warnInput" placeholder="Warning / Risk Marker">
+    <button class="addBtn" onclick="addWarning()">Add</button>
+  </section>
+
+  <section id="orders" class="section panel">
+    <h2>Orders</h2>
+    <table id="ordersTable"><tr><th>ID</th><th>Details</th><th>Actions</th></tr></table>
+    <input type="text" id="orderInput" placeholder="Court Orders">
+    <button class="addBtn" onclick="addOrder()">Add</button>
+  </section>
+
+  <section id="driving" class="section panel">
+    <h2>Driving Info</h2>
+    <table id="drivingTable"><tr><th>ID</th><th>Details</th><th>Actions</th></tr></table>
+    <input type="text" id="driveInput" placeholder="License / Endorsements">
+    <button class="addBtn" onclick="addDriving()">Add</button>
+  </section>
+
+  <section id="firearms" class="section panel">
+    <h2>Firearms</h2>
+    <table id="firearmsTable"><tr><th>ID</th><th>Details</th><th>Actions</th></tr></table>
+    <input type="text" id="fireInput" placeholder="Firearm Certificate">
+    <button class="addBtn" onclick="addFirearm()">Add</button>
   </section>
 </main>
 
+<button id="logoutBtn" onclick="logout()">Logout</button>
+
 <script>
-// ====== Login/Register ======
+// ======= Users & OCs =======
 function getUsers(){return JSON.parse(localStorage.getItem('users'))||{}}
-function saveUsers(users){localStorage.setItem('users',JSON.stringify(users))}
+function saveUsers(u){localStorage.setItem('users',JSON.stringify(u))}
 let currentUser = localStorage.getItem('currentUser')||null;
+let currentOC = null;
 
 function showLogin(){document.getElementById('loginPage').classList.remove('section');document.getElementById('registerPage').classList.add('section')}
 function showRegister(){document.getElementById('loginPage').classList.add('section');document.getElementById('registerPage').classList.remove('section')}
@@ -172,57 +258,112 @@ function showRegister(){document.getElementById('loginPage').classList.add('sect
 function login(){
   const u=document.getElementById('loginUsername').value.trim();
   const p=document.getElementById('loginPassword').value;
+  const type=document.getElementById('loginType').value;
   const users=getUsers();
-  if(users[u]&&users[u].password===p){currentUser=u;localStorage.setItem('currentUser',u);openDashboard();document.getElementById('loginError').innerText='';}
-  else document.getElementById('loginError').innerText='Invalid username or password';
+  if(users[u]&&users[u].password===p&&users[u].type===type){
+    currentUser=u;localStorage.setItem('currentUser',u);openDashboard();
+  } else document.getElementById('loginError').innerText='Invalid username, password or type';
 }
 
 function register(){
   const u=document.getElementById('regUsername').value.trim();
   const p=document.getElementById('regPassword').value;
+  const type=document.getElementById('regType').value;
   const users=getUsers();
   if(!u||!p){document.getElementById('regError').innerText='Enter username & password';return;}
   if(users[u]){document.getElementById('regError').innerText='Username exists';return;}
-  users[u]={password:p,reports:[],vehicles:[],people:[]};
+  users[u]={password:p,type:type,OCs:[]};
   saveUsers(users);
   document.getElementById('regError').innerText='Account created! Login now.';
 }
 
-// ====== Dashboard ======
+// ===== Dashboard & Logout =====
 function openDashboard(){
   document.getElementById('loginPage').classList.add('section');
   document.getElementById('registerPage').classList.add('section');
   document.getElementById('dashboardPage').classList.remove('section');
-  loadAllData();
+  loadOCList();
 }
 function logout(){currentUser=null;localStorage.removeItem('currentUser');showLogin();}
-function showSection(name){document.querySelectorAll('.section.panel').forEach(s=>s.style.display='none');document.getElementById(name).style.display='block';}
 
-// ====== Data ======
-function getData(type){const users=getUsers();return currentUser&&users[currentUser]?users[currentUser][type]:[];}
-function saveData(type,data){const users=getUsers();if(currentUser){users[currentUser][type]=data;saveUsers(users);}}
+// ======= OC Management =======
+function loadOCList(){
+  const users=getUsers();
+  const ocSelect=document.getElementById('ocSelect');
+  ocSelect.innerHTML='';
+  const u=users[currentUser];
+  u.OCs.forEach((oc,i)=>{
+    ocSelect.add(new Option(oc.personal?.Name||`OC ${i+1}`,i));
+  });
+  if(u.OCs.length>0){currentOC=0;loadOCData();}
+}
+function createOC(){
+  const users=getUsers();
+  const u=users[currentUser];
+  const newOC={
+    personal:{Name:'',DOB:'',Address:'',Gender:'',Ethnicity:'',Physical:''},
+    reports:[],vehicles:[],convictions:[],arrests:[],cj:[],warnings:[],orders:[],driving:[],firearms:[]
+  };
+  u.OCs.push(newOC);saveUsers(users);
+  loadOCList();
+}
+function loadOCData(){
+  const idx=parseInt(document.getElementById('ocSelect').value);
+  currentOC=idx;
+  const users=getUsers();const oc=users[currentUser].OCs[currentOC];
+  // Personal Info
+  document.getElementById('piName').value=oc.personal.Name;
+  document.getElementById('piDOB').value=oc.personal.DOB;
+  document.getElementById('piAddress').value=oc.personal.Address;
+  document.getElementById('piGender').value=oc.personal.Gender;
+  document.getElementById('piEthnicity').value=oc.personal.Ethnicity;
+  document.getElementById('piPhysical').value=oc.personal.Physical;
+  // Load tables
+  loadTable('reports','reportsTable');
+  loadTable('vehicles','vehiclesTable','colour,plate,brand');
+  loadTable('convictions','convictionsTable');
+  loadTable('arrests','arrestsTable');
+  loadTable('cj','cjTable');
+  loadTable('warnings','warningsTable');
+  loadTable('orders','ordersTable');
+  loadTable('driving','drivingTable');
+  loadTable('firearms','firearmsTable');
+}
+function saveOC(){const users=getUsers();users[currentUser].OCs[currentOC]=currentOCData;saveUsers(users);}
+function currentOCData(){const users=getUsers();return users[currentUser].OCs[currentOC];}
 
-// ====== Load Tables ======
-function loadReports(){const r=getData('reports');const t=document.getElementById('reportsTable');t.innerHTML='<tr><th>ID</th><th>Description</th><th>Actions</th></tr>';r.forEach((v,i)=>{const row=t.insertRow();row.insertCell(0).innerText=i+1;row.insertCell(1).innerText=v;row.insertCell(2).innerHTML=`<button class="editBtn" onclick="editReport(${i})">Edit</button> <button class="deleteBtn" onclick="deleteReport(${i})">Delete</button>`;});}
-function loadVehicles(){const r=getData('vehicles');const t=document.getElementById('vehiclesTable');t.innerHTML='<tr><th>ID</th><th>Colour</th><th>Plate</th><th>Brand</th><th>Actions</th></tr>';r.forEach((v,i)=>{const row=t.insertRow();row.insertCell(0).innerText=i+1;row.insertCell(1).innerText=v.colour;row.insertCell(2).innerText=v.plate;row.insertCell(3).innerText=v.brand;row.insertCell(4).innerHTML=`<button class="editBtn" onclick="editVehicle(${i})">Edit</button> <button class="deleteBtn" onclick="deleteVehicle(${i})">Delete</button>`;});}
-function loadPeople(){const r=getData('people');const t=document.getElementById('peopleTable');t.innerHTML='<tr><th>ID</th><th>Name</th><th>Actions</th></tr>';r.forEach((v,i)=>{const row=t.insertRow();row.insertCell(0).innerText=i+1;row.insertCell(1).innerText=v;row.insertCell(2).innerHTML=`<button class="editBtn" onclick="editPerson(${i})">Edit</button> <button class="deleteBtn" onclick="deletePerson(${i})">Delete</button>`;});}
-function loadAllData(){loadReports();loadVehicles();loadPeople();}
+// ======= Generic Table Load / Add / Edit / Delete =======
+function loadTable(prop,tableId,fields=''){ 
+  const t=document.getElementById(tableId); t.innerHTML=t.rows[0].outerHTML;
+  const data=currentOCData()[prop];
+  data.forEach((v,i)=>{
+    const row=t.insertRow();
+    row.insertCell(0).innerText=i+1;
+    if(fields){
+      const f=fields.split(',');
+      f.forEach((k,j)=>row.insertCell(j+1).innerText=v[k]||'');
+    } else {row.insertCell(1).innerText=v;}
+    const actions=row.insertCell(fields?f.length+1:2);
+    actions.innerHTML=`<button class="editBtn" onclick="editEntry('${prop}',${i})">Edit</button>
+                       <button class="deleteBtn" onclick="deleteEntry('${prop}',${i})">Delete</button>`;
+  });
+}
+function addEntry(prop,vals){const data=currentOCData()[prop];data.push(vals);saveUsers(getUsers());loadOCData();}
+function editEntry(prop,i){const data=currentOCData()[prop];if(typeof data[i]==='object'){for(let k in data[i]){data[i][k]=prompt(k,data[i][k])||data[i][k];}} else {data[i]=prompt('Edit',data[i])||data[i];}saveUsers(getUsers());loadOCData();}
+function deleteEntry(prop,i){if(confirm('Delete?')){const data=currentOCData()[prop];data.splice(i,1);saveUsers(getUsers());loadOCData();}}
 
-// ====== Add/Edit/Delete ======
-function addReport(){const v=document.getElementById('reportInput').value;if(!v)return;const d=getData('reports');d.push(v);saveData('reports',d);document.getElementById('reportInput').value='';loadReports();}
-function editReport(i){const d=getData('reports');const v=prompt("Edit report:",d[i]);if(v!==null){d[i]=v;saveData('reports',d);loadReports();}}
-function deleteReport(i){const d=getData('reports');if(confirm("Delete this report?")){d.splice(i,1);saveData('reports',d);loadReports();}}
+// ===== Add buttons =====
+function addReport(){addEntry('reports',document.getElementById('reportInput').value);document.getElementById('reportInput').value='';}
+function addVehicle(){addEntry('vehicles',{colour:document.getElementById('vehicleColour').value,plate:document.getElementById('vehiclePlate').value,brand:document.getElementById('vehicleBrand').value});document.getElementById('vehicleColour').value='';document.getElementById('vehiclePlate').value='';document.getElementById('vehicleBrand').value='';}
+function addConviction(){addEntry('convictions',document.getElementById('convInput').value);document.getElementById('convInput').value='';}
+function addArrest(){addEntry('arrests',document.getElementById('arrestInput').value);document.getElementById('arrestInput').value='';}
+function addCJ(){addEntry('cj',document.getElementById('cjInput').value);document.getElementById('cjInput').value='';}
+function addWarning(){addEntry('warnings',document.getElementById('warnInput').value);document.getElementById('warnInput').value='';}
+function addOrder(){addEntry('orders',document.getElementById('orderInput').value);document.getElementById('orderInput').value='';}
+function addDriving(){addEntry('driving',document.getElementById('driveInput').value);document.getElementById('driveInput').value='';}
+function addFirearm(){addEntry('firearms',document.getElementById('fireInput').value);document.getElementById('fireInput').value='';}
 
-function addVehicle(){const c=document.getElementById('vehicleColour').value.trim(),p=document.getElementById('vehiclePlate').value.trim(),b=document.getElementById('vehicleBrand').value.trim();if(!c||!p||!b)return;const d=getData('vehicles');d.push({colour:c,plate:p,brand:b});saveData('vehicles',d);document.getElementById('vehicleColour').value='';document.getElementById('vehiclePlate').value='';document.getElementById('vehicleBrand').value='';loadVehicles();}
-function editVehicle(i){const d=getData('vehicles');const v=d[i];const c=prompt("Colour:",v.colour),p=prompt("Plate:",v.plate),b=prompt("Brand:",v.brand);if(c!==null&&p!==null&&b!==null){d[i]={colour:c,plate:p,brand:b};saveData('vehicles',d);loadVehicles();}}
-function deleteVehicle(i){const d=getData('vehicles');if(confirm("Delete this vehicle?")){d.splice(i,1);saveData('vehicles',d);loadVehicles();}}
-
-function addPerson(){const v=document.getElementById('peopleInput').value.trim();if(!v)return;const d=getData('people');d.push(v);saveData('people',d);document.getElementById('peopleInput').value='';loadPeople();}
-function editPerson(i){const d=getData('people');const v=prompt("Edit name:",d[i]);if(v!==null){d[i]=v;saveData('people',d);loadPeople();}}
-function deletePerson(i){const d=getData('people');if(confirm("Delete this person?")){d.splice(i,1);saveData('people',d);loadPeople();}}
-
-// Auto-login
-if(currentUser) openDashboard();
-</script>
-</body>
-</html>
+// ===== Personal Info Save =====
+function savePersonalInfo(){
+  const oc=currentOCData();
+  oc.personal.Name=document.getElementBy
