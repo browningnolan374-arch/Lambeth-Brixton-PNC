@@ -8,18 +8,12 @@ body {font-family:Arial,sans-serif;background:#121212;color:#eee;margin:0;paddin
 header {background:#0b3d91;color:white;padding:15px;text-align:center;font-size:24px;font-weight:bold;border-bottom:2px solid #0055a5;}
 main { padding:20px; max-width:1000px; margin:auto; }
 .section { display:none; }
-nav {display:flex;justify-content:center;background:#0a2c70;padding:10px;gap:10px;}
-nav button {background:#1a4dab;color:white;border:none;padding:8px 15px;border-radius:4px;cursor:pointer;font-weight:bold;}
-nav button:hover { background:#3a6fc0; }
-h2 { background:#0b3d91; padding:10px; border-radius:4px; margin-top:0; }
-.panel { background:#1e1e1e; padding:10px; border-radius:4px; margin-bottom:15px; box-shadow:0 2px 4px rgba(0,0,0,0.5); }
-input, select, textarea { padding:5px; margin-right:5px; margin-top:5px; border-radius:3px; border:none; background:#2b2b2b; color:#eee; width:90%; }
-button.addBtn, button { background:#0b3d91; color:white; border:none; padding:5px 10px; cursor:pointer; border-radius:3px; margin-top:5px; }
-button.addBtn:hover, button:hover { background:#3a6fc0; }
-button.editBtn { background:#4caf50; color:white; }
-button.deleteBtn { background:#f44336; color:white; }
-.error { color:red; margin-top:5px; }
+input, textarea, select { padding:5px;margin-top:5px;width:90%;border-radius:3px;border:none;background:#2b2b2b;color:#eee; }
+button {background:#0b3d91;color:white;border:none;padding:5px 10px;margin-top:5px;border-radius:3px;cursor:pointer;}
+button:hover { background:#3a6fc0; }
+#error {color:red;margin-top:5px;}
 #logoutBtn { position:fixed; bottom:20px; right:20px; background:#f44336; padding:10px 15px; border:none; color:white; border-radius:4px; cursor:pointer; font-weight:bold; }
+.panel { background:#1e1e1e;padding:10px;border-radius:4px;margin-bottom:15px; }
 </style>
 </head>
 <body>
@@ -28,135 +22,131 @@ button.deleteBtn { background:#f44336; color:white; }
 
 <!-- LOGIN SCREENS -->
 <main id="loginMETPage">
-  <h2>MET Officer Login</h2>
-  <input type="text" id="metUsername" placeholder="Username"><br><br>
-  <input type="password" id="metPassword" placeholder="Password"><br><br>
-  <input type="text" id="metCollar" placeholder="Collar Number"><br><br>
-  <button onclick="loginMET()">Login</button>
-  <button onclick="showCivilianLogin()">Switch to Civilian Login</button>
-  <button onclick="showMETRegister()">Register MET Account</button>
-  <p class="error" id="metLoginError"></p>
+<h2>MET Login</h2>
+<input id="metUsername" placeholder="Username"><br><br>
+<input id="metPassword" placeholder="Password" type="password"><br><br>
+<input id="metCollar" placeholder="Collar Number"><br><br>
+<button onclick="loginMET()">Login</button>
+<button onclick="showCivilianLogin()">Switch to Civilian Login</button>
+<p id="metLoginError"></p>
 </main>
 
 <main id="loginCivilPage" class="section">
-  <h2>Civilian Login</h2>
-  <input type="text" id="civilUsername" placeholder="Username"><br><br>
-  <input type="password" id="civilPassword" placeholder="Password"><br><br>
-  <button onclick="loginCivil()">Login</button>
-  <button onclick="showMETLogin()">Switch to MET Login</button>
-  <button onclick="showCivilianRegister()">Register Civilian Account</button>
-  <p class="error" id="civilLoginError"></p>
+<h2>Civilian Login</h2>
+<input id="civilUsername" placeholder="Username"><br><br>
+<input id="civilPassword" placeholder="Password" type="password"><br><br>
+<button onclick="loginCivil()">Login</button>
+<button onclick="showMETLogin()">Switch to MET Login</button>
+<p id="civilLoginError"></p>
 </main>
 
 <!-- REGISTRATION SCREENS -->
 <main id="registerMETPage" class="section">
-  <h2>MET Officer Registration</h2>
-  <input type="text" id="regMETUsername" placeholder="Username"><br><br>
-  <input type="password" id="regMETPassword" placeholder="Password"><br><br>
-  <input type="text" id="regMETCollar" placeholder="Collar Number"><br><br>
-  <button onclick="registerMET()">Create MET Account</button>
-  <button onclick="showCivilianRegister()">Switch to Civilian Registration</button>
-  <button onclick="showMETLogin()">Back to MET Login</button>
-  <p class="error" id="regMETError"></p>
+<h2>MET Registration</h2>
+<input id="regMETUsername" placeholder="Username"><br><br>
+<input id="regMETPassword" placeholder="Password" type="password"><br><br>
+<input id="regMETCollar" placeholder="Collar Number"><br><br>
+<button onclick="registerMET()">Register MET</button>
+<button onclick="showMETLogin()">Back to Login</button>
+<p id="regMETError"></p>
 </main>
 
 <main id="registerCivilPage" class="section">
-  <h2>Civilian Registration</h2>
-  <input type="text" id="regCivilUsername" placeholder="Username"><br><br>
-  <input type="password" id="regCivilPassword" placeholder="Password"><br><br>
-  <button onclick="registerCivil()">Create Civilian Account</button>
-  <button onclick="showMETRegister()">Switch to MET Registration</button>
-  <button onclick="showCivilianLogin()">Back to Civilian Login</button>
-  <p class="error" id="regCivilError"></p>
+<h2>Civilian Registration</h2>
+<input id="regCivilUsername" placeholder="Username"><br><br>
+<input id="regCivilPassword" placeholder="Password" type="password"><br><br>
+<button onclick="registerCivil()">Register Civilian</button>
+<button onclick="showCivilianLogin()">Back to Login</button>
+<p id="regCivilError"></p>
 </main>
 
-<!-- DASHBOARD VIEW (READ-ONLY) -->
+<!-- DASHBOARD VIEW -->
 <main id="dashboardView" class="section">
-  <h2>OC Records (View Only)</h2>
-  <label>Select OC: <select id="ocSelectView" onchange="loadOCDataView()"></select></label><br><br>
-  <div id="ocInfoView" class="panel"></div>
-  <button id="makeCallBtn" onclick="showCallForm()">Make a Call</button>
-  <button onclick="showCreateOCForm()">Create OC</button>
+<h2>OC Records (View Only)</h2>
+<label>Select OC: <select id="ocSelectView" onchange="loadOCDataView()"></select></label><br><br>
+<div id="ocInfoView" class="panel"></div>
+<button onclick="showCreateOCForm()">Create OC</button>
+<button onclick="showCallForm()">Make Call</button>
 </main>
 
-<!-- DASHBOARD EDIT (MET ONLY) -->
+<!-- DASHBOARD EDIT (MET) -->
 <main id="dashboardEdit" class="section">
-  <h2>OC Records (Edit Mode)</h2>
-  <label>Select OC: <select id="ocSelectEdit" onchange="loadOCDataEdit()"></select></label><br><br>
-  <div id="ocInfoEdit" class="panel"></div>
-  <button onclick="showCallsDashboard()">View Calls</button>
+<h2>OC Records (Edit)</h2>
+<label>Select OC: <select id="ocSelectEdit" onchange="loadOCDataEdit()"></select></label><br><br>
+<div id="ocInfoEdit" class="panel"></div>
+<button onclick="showCallsDashboard()">View Calls</button>
 </main>
 
 <!-- CREATE OC FORM (CIV ONLY) -->
 <main id="createOCFormPage" class="section">
-  <h2>Create New OC</h2>
-  <label>RP Name:<br><input type="text" id="newOCName"></label><br><br>
-  <label>RP Birthday:<br><input type="date" id="newOCBirthday"></label><br><br>
-  <label>RP Address:<br><input type="text" id="newOCAddress"></label><br><br>
-  <label>Gender:<br><input type="text" id="newOCGender"></label><br><br>
-  <label>Ethnicity:<br><input type="text" id="newOCEthnicity"></label><br><br>
-  <label>Distinguishing Marks:<br><input type="text" id="newOCDistMarks"></label><br><br>
-  <button onclick="submitNewOC()">Create OC</button>
-  <button onclick="cancelNewOC()">Cancel</button>
-  <p class="error" id="newOCError"></p>
+<h2>Create OC</h2>
+<label>RP Name:<br><input id="newOCName"></label><br><br>
+<label>RP Birthday:<br><input type="date" id="newOCBirthday"></label><br><br>
+<label>RP Address:<br><input id="newOCAddress"></label><br><br>
+<label>Gender:<br><input id="newOCGender"></label><br><br>
+<label>Ethnicity:<br><input id="newOCEthnicity"></label><br><br>
+<label>Distinguishing Marks:<br><input id="newOCDistMarks"></label><br><br>
+<button onclick="submitNewOC()">Create OC</button>
+<button onclick="cancelNewOC()">Cancel</button>
+<p id="newOCError"></p>
 </main>
 
-<!-- CIVILIAN CALL FORM -->
+<!-- CALL FORM (CIV) -->
 <main id="civCallPage" class="section">
-  <h2>Submit a Call</h2>
-  <label>Caller Name:<br><input type="text" id="callName"></label><br><br>
-  <label>Incident Type:<br><input type="text" id="callType"></label><br><br>
-  <label>Location:<br><input type="text" id="callLocation"></label><br><br>
-  <label>Description:<br><textarea id="callDesc"></textarea></label><br><br>
-  <button onclick="submitCall()">Submit Call</button>
-  <button onclick="cancelCallForm()">Cancel</button>
-  <p class="error" id="callError"></p>
+<h2>Submit a Call</h2>
+<label>Caller Name:<br><input id="callName"></label><br><br>
+<label>Incident Type:<br><input id="callType"></label><br><br>
+<label>Location:<br><input id="callLocation"></label><br><br>
+<label>Description:<br><textarea id="callDesc"></textarea></label><br><br>
+<button onclick="submitCall()">Submit Call</button>
+<button onclick="cancelCallForm()">Cancel</button>
+<p id="callError"></p>
 </main>
 
-<!-- MET CALLS DASHBOARD -->
+<!-- MET CALL DASHBOARD -->
 <main id="metCallDashboard" class="section">
-  <h2>Incoming Calls</h2>
-  <div id="callsList" class="panel"></div>
+<h2>Incoming Calls</h2>
+<div id="callsList" class="panel"></div>
 </main>
 
 <button id="logoutBtn" onclick="logout()">Logout</button>
 
 <script>
-// ===== USERS =====
+// ===== STORAGE =====
 let currentUser = JSON.parse(localStorage.getItem('currentUser')) || null;
-
 function getUsers(){ return JSON.parse(localStorage.getItem('users'))||{} }
-function saveUsers(u){ localStorage.setItem('users',JSON.stringify(u)) }
+function saveUsers(u){ localStorage.setItem('users', JSON.stringify(u)) }
+function hideAll(){ ['loginMETPage','loginCivilPage','registerMETPage','registerCivilPage','dashboardView','dashboardEdit','createOCFormPage','civCallPage','metCallDashboard'].forEach(id=>document.getElementById(id).style.display='none'); }
+function clearErrors(){ ['metLoginError','civilLoginError','regMETError','regCivilError','newOCError','callError'].forEach(id=>document.getElementById(id).innerText=''); }
 
-// ===== LOGIN/REGISTER SWITCH =====
-function hideAll(){
-  ['loginMETPage','loginCivilPage','registerMETPage','registerCivilPage','dashboardView','dashboardEdit','createOCFormPage','civCallPage','metCallDashboard'].forEach(id=>document.getElementById(id).classList.add('section'));
-}
-function showMETLogin(){ hideAll(); document.getElementById('loginMETPage').classList.remove('section'); }
-function showCivilianLogin(){ hideAll(); document.getElementById('loginCivilPage').classList.remove('section'); }
-function showMETRegister(){ hideAll(); document.getElementById('registerMETPage').classList.remove('section'); }
-function showCivilianRegister(){ hideAll(); document.getElementById('registerCivilPage').classList.remove('section'); }
+// ===== PAGE SWITCH =====
+function showMETLogin(){ hideAll(); document.getElementById('loginMETPage').style.display='block'; clearErrors(); }
+function showCivilianLogin(){ hideAll(); document.getElementById('loginCivilPage').style.display='block'; clearErrors(); }
+function showMETRegister(){ hideAll(); document.getElementById('registerMETPage').style.display='block'; clearErrors(); }
+function showCivilianRegister(){ hideAll(); document.getElementById('registerCivilPage').style.display='block'; clearErrors(); }
 
-// ===== REGISTRATION =====
+// ===== REGISTER =====
 function registerMET(){
   const u=document.getElementById('regMETUsername').value.trim();
   const p=document.getElementById('regMETPassword').value;
-  const collar=document.getElementById('regMETCollar').value.trim();
+  const c=document.getElementById('regMETCollar').value.trim();
   const users=getUsers();
-  if(!u||!p){document.getElementById('regMETError').innerText='Enter username & password';return;}
-  if(!collar){document.getElementById('regMETError').innerText='Collar number required';return;}
-  if(users[u]){document.getElementById('regMETError').innerText='Username exists';return;}
-  users[u]={password:p,type:'MET',collar:collar,OCs:[]};
-  saveUsers(users);document.getElementById('regMETError').innerText='Account created! Login now.';
+  if(!u||!p||!c){document.getElementById('regMETError').innerText='All fields required'; return;}
+  if(users[u]){document.getElementById('regMETError').innerText='Username exists'; return;}
+  users[u]={password:p,type:'MET',collar:c,OCs:[]};
+  saveUsers(users);
+  document.getElementById('regMETError').innerText='Account created! Login now.';
 }
+
 function registerCivil(){
   const u=document.getElementById('regCivilUsername').value.trim();
   const p=document.getElementById('regCivilPassword').value;
   const users=getUsers();
-  if(!u||!p){document.getElementById('regCivilError').innerText='Enter username & password';return;}
-  if(users[u]){document.getElementById('regCivilError').innerText='Username exists';return;}
-  users[u]={password:p,type:'Civilian',collar:'',OCs:[]};
-  saveUsers(users);document.getElementById('regCivilError').innerText='Account created! Login now.';
+  if(!u||!p){document.getElementById('regCivilError').innerText='All fields required'; return;}
+  if(users[u]){document.getElementById('regCivilError').innerText='Username exists'; return;}
+  users[u]={password:p,type:'Civilian',OCs:[]};
+  saveUsers(users);
+  document.getElementById('regCivilError').innerText='Account created! Login now.';
 }
 
 // ===== LOGIN =====
@@ -165,112 +155,76 @@ function loginMET(){
   const p=document.getElementById('metPassword').value;
   const c=document.getElementById('metCollar').value.trim();
   const users=getUsers();
-  if(!users[u]||users[u].password!==p||users[u].type!=='MET'){document.getElementById('metLoginError').innerText='Invalid username/password';return;}
-  if(users[u].collar!==c){document.getElementById('metLoginError').innerText='Invalid collar number';return;}
+  if(!users[u] || users[u].password!==p || users[u].type!=='MET'){ document.getElementById('metLoginError').innerText='Invalid username/password'; return; }
+  if(users[u].collar!==c){ document.getElementById('metLoginError').innerText='Invalid collar number'; return; }
   currentUser={username:u,type:'MET'}; localStorage.setItem('currentUser',JSON.stringify(currentUser));
   openDashboard();
 }
+
 function loginCivil(){
   const u=document.getElementById('civilUsername').value.trim();
   const p=document.getElementById('civilPassword').value;
   const users=getUsers();
-  if(!users[u]||users[u].password!==p||users[u].type!=='Civilian'){document.getElementById('civilLoginError').innerText='Invalid username/password';return;}
+  if(!users[u] || users[u].password!==p || users[u].type!=='Civilian'){ document.getElementById('civilLoginError').innerText='Invalid username/password'; return; }
   currentUser={username:u,type:'Civilian'}; localStorage.setItem('currentUser',JSON.stringify(currentUser));
   openDashboard();
 }
 
 // ===== DASHBOARD =====
 function openDashboard(){
-  const users=getUsers();
-  if(!currentUser) return;
-  const user=users[currentUser.username]; if(!user) return;
+  if(!currentUser){ showMETLogin(); return; }
   hideAll();
-  document.getElementById('dashboardView').classList.remove('section');
-  if(currentUser.type==='MET'){document.getElementById('dashboardEdit').classList.remove('section');}
-  else{document.getElementById('createOCFormPage').classList.add('section');}
-  loadOCList('View');
-  if(currentUser.type==='MET') loadOCList('Edit');
+  document.getElementById('dashboardView').style.display='block';
+  if(currentUser.type==='MET'){ document.getElementById('dashboardEdit').style.display='block'; }
+  if(currentUser.type==='Civilian'){ document.getElementById('createOCFormPage').style.display='none'; }
 }
 
-function logout(){currentUser=null;localStorage.removeItem('currentUser');hideAll();showMETLogin();}
+// ===== LOGOUT =====
+function logout(){ currentUser=null; localStorage.removeItem('currentUser'); hideAll(); showMETLogin(); }
 
-// ===== OC FUNCTIONS =====
-function loadOCList(mode){
-  const OCs=JSON.parse(localStorage.getItem('OCs')||'{}');
-  const selView=document.getElementById('ocSelectView');
-  const selEdit=document.getElementById('ocSelectEdit');
-  if(selView) selView.innerHTML=''; if(selEdit) selEdit.innerHTML='';
-  Object.keys(OCs).forEach(o=>{
-    if(selView){let opt=document.createElement('option');opt.value=o;opt.innerText=o;selView.appendChild(opt);}
-    if(selEdit){let opt=document.createElement('option');opt.value=o;opt.innerText=o;selEdit.appendChild(opt);}
-  });
-  if(mode==='View') loadOCDataView(); else if(mode==='Edit') loadOCDataEdit();
-}
-
-function loadOCDataView(){
-  const o=document.getElementById('ocSelectView').value;
-  const OCs=JSON.parse(localStorage.getItem('OCs')||'{}');
-  if(!OCs[o]) return;
-  document.getElementById('ocInfoView').innerText=JSON.stringify(OCs[o],null,2);
-}
-
-function loadOCDataEdit(){
-  const o=document.getElementById('ocSelectEdit').value;
-  const OCs=JSON.parse(localStorage.getItem('OCs')||'{}');
-  if(!OCs[o]) return;
-  const div=document.getElementById('ocInfoEdit');
-  div.innerHTML=`
-    <h3>Personal Info</h3>
-    Name:<input value="${OCs[o].personal.name||''}" onchange="updateOC('${o}','personal','name',this.value)"><br>
-    DOB:<input value="${OCs[o].personal.dob||''}" onchange="updateOC('${o}','personal','dob',this.value)"><br>
-    Address:<input value="${OCs[o].personal.address||''}" onchange="updateOC('${o}','personal','address',this.value)"><br>
-    Gender:<input value="${OCs[o].personal.gender||''}" onchange="updateOC('${o}','personal','gender',this.value)"><br>
-    Ethnicity:<input value="${OCs[o].personal.ethnicity||''}" onchange="updateOC('${o}','personal','ethnicity',this.value)"><br>
-    Marks:<input value="${OCs[o].personal.marks||''}" onchange="updateOC('${o}','personal','marks',this.value)"><br>
-    <h3>Convictions</h3><textarea onchange="updateOC('${o}','convictions','text',this.value)">${OCs[o].convictions.text||''}</textarea><br>
-    <h3>Reports</h3><textarea onchange="updateOC('${o}','reports','text',this.value)">${OCs[o].reports.join('\n')||''}</textarea><br>
-    <h3>Vehicles</h3><textarea onchange="updateOC('${o}','vehicles','text',this.value)">${OCs[o].vehicles.join('\n')||''}</textarea>
-  `;
-}
-
-function updateOC(o,sec,key,val){
-  const OCs=JSON.parse(localStorage.getItem('OCs')||'{}');
-  if(sec==='reports'||sec==='vehicles') OCs[o][sec]=val.split('\n'); else OCs[o][sec][key]=val;
-  localStorage.setItem('OCs',JSON.stringify(OCs));
-}
-
-// ===== CIV CREATE OC FORM =====
-function showCreateOCForm(){hideAll();document.getElementById('createOCFormPage').classList.remove('section');}
-function cancelNewOC(){document.getElementById('createOCFormPage').classList.add('section'); openDashboard();}
+// ===== CREATE OC (CIV) =====
+function showCreateOCForm(){ hideAll(); document.getElementById('createOCFormPage').style.display='block'; }
+function cancelNewOC(){ document.getElementById('createOCFormPage').style.display='none'; openDashboard(); }
 function submitNewOC(){
   const name=document.getElementById('newOCName').value.trim();
   const dob=document.getElementById('newOCBirthday').value.trim();
   const addr=document.getElementById('newOCAddress').value.trim();
-  const gender=document.getElementById('newOCGender').value.trim();
-  const eth=document.getElementById('newOCEthnicity').value.trim();
-  const marks=document.getElementById('newOCDistMarks').value.trim();
-  if(!name||!dob||!addr){document.getElementById('newOCError').innerText='Name, Birthday & Address required';return;}
-  const OCs=JSON.parse(localStorage.getItem('OCs')||'{}');
-  if(OCs[name]){document.getElementById('newOCError').innerText='OC exists';return;}
-  OCs[name]={personal:{name,dob,address:addr,gender,ethnicity:eth,marks},convictions:{},arrests:{},reports:[],vehicles:[]};
+  if(!name||!dob||!addr){document.getElementById('newOCError').innerText='Name, Birthday & Address required'; return;}
+  let OCs=JSON.parse(localStorage.getItem('OCs')||'{}');
+  if(OCs[name]){document.getElementById('newOCError').innerText='OC exists'; return;}
+  OCs[name]={personal:{name,dob,address:addr},convictions:{},vehicles:[],reports:[]};
   localStorage.setItem('OCs',JSON.stringify(OCs));
-  alert('OC Created!'); cancelNewOC();
+  alert('OC Created!'); cancelNewOC(); loadOCList();
 }
 
-// ===== CALLS =====
-function showCallForm(){hideAll();document.getElementById('civCallPage').classList.remove('section');}
-function cancelCallForm(){document.getElementById('civCallPage').classList.add('section'); openDashboard();}
+// ===== CALL FORM =====
+function showCallForm(){ hideAll(); document.getElementById('civCallPage').style.display='block'; }
+function cancelCallForm(){ document.getElementById('civCallPage').style.display='none'; openDashboard(); }
 function submitCall(){
   const name=document.getElementById('callName').value.trim();
   const type=document.getElementById('callType').value.trim();
   const loc=document.getElementById('callLocation').value.trim();
   const desc=document.getElementById('callDesc').value.trim();
-  if(!name||!type||!loc){document.getElementById('callError').innerText='Fill all required fields';return;}
+  if(!name||!type||!loc){document.getElementById('callError').innerText='All fields required'; return;}
   let calls=JSON.parse(localStorage.getItem('calls')||'[]');
   calls.push({caller:name,type:type,location:loc,description:desc,status:'Pending',timestamp:new Date().toLocaleString()});
   localStorage.setItem('calls',JSON.stringify(calls));
   alert('Call submitted!'); cancelCallForm();
 }
 
-function showCallsDashboard(){
-  hideAll(); document.getElementById('
+// ===== OC LIST LOAD =====
+function loadOCList(){
+  let OCs=JSON.parse(localStorage.getItem('OCs')||'{}');
+  let selView=document.getElementById('ocSelectView');
+  let selEdit=document.getElementById('ocSelectEdit');
+  if(selView) selView.innerHTML=''; if(selEdit) selEdit.innerHTML='';
+  Object.keys(OCs).forEach(name=>{
+    if(selView){let opt=document.createElement('option'); opt.value=name; opt.innerText=name; selView.appendChild(opt);}
+    if(selEdit){let opt=document.createElement('option'); opt.value=name; opt.innerText=name; selEdit.appendChild(opt);}
+  });
+}
+
+</script>
+
+</body>
+</html>
