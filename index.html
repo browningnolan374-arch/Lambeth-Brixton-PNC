@@ -2,19 +2,27 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>PNC Login & Dashboard</title>
+<title>PNC Dashboard</title>
 <style>
-  body { font-family: sans-serif; background:#f2f2f2; color:#333; margin:0; padding:0;}
-  header { background:#003366; color:white; padding:15px; text-align:center;}
-  nav { background:#0055a5; padding:10px; display:flex; justify-content:center; gap:10px;}
-  nav button { padding:5px 10px; color:white; background:#0077cc; border:none; cursor:pointer;}
-  nav button:hover { background:#0099ff; }
-  main { padding:20px;}
-  table { width:100%; border-collapse:collapse; margin-bottom:15px;}
-  th, td { border:1px solid #ccc; padding:8px; text-align:left;}
-  input { padding:5px; margin-right:5px;}
+  body { font-family: sans-serif; background:#1b1b1b; color:#eee; margin:0; padding:0;}
+  header { background:#0b3d91; color:white; padding:15px; text-align:center;}
+  nav { background:#0a2c70; padding:10px; display:flex; justify-content:center; gap:10px;}
+  nav button { padding:5px 12px; color:white; background:#1a4dab; border:none; cursor:pointer; border-radius:3px;}
+  nav button:hover { background:#3a6fc0; }
+  main { padding:20px; max-width:900px; margin:auto;}
+  table { width:100%; border-collapse:collapse; margin-bottom:15px; background:#2b2b2b;}
+  th, td { border:1px solid #444; padding:8px; text-align:left;}
+  th { background:#0b3d91; }
+  input, select { padding:5px; margin:3px 5px 10px 0; border-radius:3px; border:1px solid #444; background:#333; color:#eee;}
+  button.addBtn { background:#0b3d91; color:white; border:none; padding:5px 10px; cursor:pointer; border-radius:3px; }
+  button.addBtn:hover { background:#3a6fc0; }
+  button.editBtn, button.deleteBtn { padding:3px 6px; margin-right:3px; cursor:pointer; border-radius:3px; border:none; }
+  button.editBtn { background:#4caf50; color:white; }
+  button.deleteBtn { background:#f44336; color:white; }
   .hidden { display:none; }
   .error { color:red; margin-top:5px; }
+  h2 { border-bottom:1px solid #444; padding-bottom:5px;}
+  .form-group { margin-bottom:5px;}
 </style>
 </head>
 <body>
@@ -53,30 +61,38 @@
   <section id="reports" class="section">
     <h2>Reports</h2>
     <table id="reportsTable">
-      <tr><th>ID</th><th>Description</th></tr>
+      <tr><th>ID</th><th>Description</th><th>Actions</th></tr>
     </table>
-    <input type="text" id="reportInput" placeholder="Report description">
-    <button onclick="addReport()">Add Report</button>
+    <div class="form-group">
+      <input type="text" id="reportInput" placeholder="Report description">
+      <button class="addBtn" onclick="addReport()">Add Report</button>
+    </div>
   </section>
 
   <!-- Vehicles Section -->
   <section id="vehicles" class="section hidden">
     <h2>Vehicles</h2>
     <table id="vehiclesTable">
-      <tr><th>ID</th><th>Vehicle Name</th></tr>
+      <tr><th>ID</th><th>Colour</th><th>Plate</th><th>Brand</th><th>Actions</th></tr>
     </table>
-    <input type="text" id="vehicleInput" placeholder="Vehicle name">
-    <button onclick="addVehicle()">Add Vehicle</button>
+    <div class="form-group">
+      <input type="text" id="vehicleColour" placeholder="Colour">
+      <input type="text" id="vehiclePlate" placeholder="Plate">
+      <input type="text" id="vehicleBrand" placeholder="Brand">
+      <button class="addBtn" onclick="addVehicle()">Add Vehicle</button>
+    </div>
   </section>
 
   <!-- People Section -->
   <section id="people" class="section hidden">
     <h2>People</h2>
     <table id="peopleTable">
-      <tr><th>ID</th><th>Name</th></tr>
+      <tr><th>ID</th><th>Name</th><th>Actions</th></tr>
     </table>
-    <input type="text" id="peopleInput" placeholder="Person name">
-    <button onclick="addPerson()">Add Person</button>
+    <div class="form-group">
+      <input type="text" id="peopleInput" placeholder="Person name">
+      <button class="addBtn" onclick="addPerson()">Add Person</button>
+    </div>
   </section>
 </main>
 
@@ -96,7 +112,6 @@ function showLogin() {
   document.getElementById('loginPage').classList.remove('hidden');
   document.getElementById('registerPage').classList.add('hidden');
 }
-
 function showRegister() {
   document.getElementById('loginPage').classList.add('hidden');
   document.getElementById('registerPage').classList.remove('hidden');
@@ -160,7 +175,6 @@ function getData(type) {
   if(currentUser && users[currentUser]) return users[currentUser][type];
   return [];
 }
-
 function saveData(type, data) {
   const users = getUsers();
   if(currentUser) {
@@ -173,31 +187,42 @@ function saveData(type, data) {
 function loadReports() {
   const reports = getData('reports');
   const table = document.getElementById('reportsTable');
-  table.innerHTML = '<tr><th>ID</th><th>Description</th></tr>';
-  reports.forEach((r,i)=> {
+  table.innerHTML = '<tr><th>ID</th><th>Description</th><th>Actions</th></tr>';
+  reports.forEach((r,i)=>{
     const row = table.insertRow();
     row.insertCell(0).innerText = i+1;
     row.insertCell(1).innerText = r;
+    const actions = row.insertCell(2);
+    actions.innerHTML = `<button class="editBtn" onclick="editReport(${i})">Edit</button>
+                         <button class="deleteBtn" onclick="deleteReport(${i})">Delete</button>`;
   });
 }
 function loadVehicles() {
   const vehicles = getData('vehicles');
   const table = document.getElementById('vehiclesTable');
-  table.innerHTML = '<tr><th>ID</th><th>Vehicle Name</th></tr>';
-  vehicles.forEach((v,i)=> {
+  table.innerHTML = '<tr><th>ID</th><th>Colour</th><th>Plate</th><th>Brand</th><th>Actions</th></tr>';
+  vehicles.forEach((v,i)=>{
     const row = table.insertRow();
     row.insertCell(0).innerText = i+1;
-    row.insertCell(1).innerText = v;
+    row.insertCell(1).innerText = v.colour;
+    row.insertCell(2).innerText = v.plate;
+    row.insertCell(3).innerText = v.brand;
+    const actions = row.insertCell(4);
+    actions.innerHTML = `<button class="editBtn" onclick="editVehicle(${i})">Edit</button>
+                         <button class="deleteBtn" onclick="deleteVehicle(${i})">Delete</button>`;
   });
 }
 function loadPeople() {
   const people = getData('people');
   const table = document.getElementById('peopleTable');
-  table.innerHTML = '<tr><th>ID</th><th>Name</th></tr>';
-  people.forEach((p,i)=> {
+  table.innerHTML = '<tr><th>ID</th><th>Name</th><th>Actions</th></tr>';
+  people.forEach((p,i)=>{
     const row = table.insertRow();
     row.insertCell(0).innerText = i+1;
     row.insertCell(1).innerText = p;
+    const actions = row.insertCell(2);
+    actions.innerHTML = `<button class="editBtn" onclick="editPerson(${i})">Edit</button>
+                         <button class="deleteBtn" onclick="deletePerson(${i})">Delete</button>`;
   });
 }
 
@@ -207,38 +232,101 @@ function loadAllData() {
   loadPeople();
 }
 
-// ====== Add Entries ======
+// ====== Add / Edit / Delete ======
+// Reports
 function addReport() {
   const input = document.getElementById('reportInput');
   if(!input.value) return;
   const data = getData('reports');
   data.push(input.value);
   saveData('reports', data);
-  input.value = '';
+  input.value='';
   loadReports();
 }
+function editReport(index) {
+  const data = getData('reports');
+  const newVal = prompt("Edit report:", data[index]);
+  if(newVal!==null) {
+    data[index]=newVal;
+    saveData('reports', data);
+    loadReports();
+  }
+}
+function deleteReport(index) {
+  const data = getData('reports');
+  if(confirm("Delete this report?")) {
+    data.splice(index,1);
+    saveData('reports', data);
+    loadReports();
+  }
+}
+
+// Vehicles
 function addVehicle() {
-  const input = document.getElementById('vehicleInput');
-  if(!input.value) return;
+  const colour = document.getElementById('vehicleColour').value.trim();
+  const plate = document.getElementById('vehiclePlate').value.trim();
+  const brand = document.getElementById('vehicleBrand').value.trim();
+  if(!colour || !plate || !brand) return;
   const data = getData('vehicles');
-  data.push(input.value);
+  data.push({colour, plate, brand});
   saveData('vehicles', data);
-  input.value = '';
+  document.getElementById('vehicleColour').value='';
+  document.getElementById('vehiclePlate').value='';
+  document.getElementById('vehicleBrand').value='';
   loadVehicles();
 }
-function addPerson() {
-  const input = document.getElementById('peopleInput');
-  if(!input.value) return;
-  const data = getData('people');
-  data.push(input.value);
-  saveData('people', data);
-  input.value = '';
-  loadPeople();
+function editVehicle(index) {
+  const data = getData('vehicles');
+  const v = data[index];
+  const colour = prompt("Colour:", v.colour);
+  const plate = prompt("Plate:", v.plate);
+  const brand = prompt("Brand:", v.brand);
+  if(colour!==null && plate!==null && brand!==null){
+    data[index]={colour,plate,brand};
+    saveData('vehicles', data);
+    loadVehicles();
+  }
+}
+function deleteVehicle(index) {
+  const data = getData('vehicles');
+  if(confirm("Delete this vehicle?")) {
+    data.splice(index,1);
+    saveData('vehicles', data);
+    loadVehicles();
+  }
 }
 
-// ====== Auto-login if user already logged in ======
-if(currentUser) openDashboard();
-</script>
+// People
+function addPerson() {
+  const input = document.getElementById('peopleInput').value.trim();
+  if(!input) return;
+  const data = getData('people');
+  data.push(input);
+  saveData('people', data);
+  document.getElementById('peopleInput').value='';
+  loadPeople();
+}
+function editPerson(index) {
+  const data = getData('people');
+  const newVal = prompt("Edit name:", data[index]);
+  if(newVal!==null){
+    data[index]=newVal;
+    saveData('people', data);
+    loadPeople();
+  }
+}
+function deletePerson(index) {
+  const data = getData('people');
+  if(confirm("Delete this person?")){
+    data.splice(index,1);
+    saveData('people', data);
+    loadPeople();
+  }
+}
 
+// Auto-login if user already logged in
+if(currentUser) openDashboard();
+
+</script>
 </body>
 </html>
