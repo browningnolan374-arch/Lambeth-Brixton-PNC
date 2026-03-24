@@ -30,7 +30,7 @@ button.deleteBtn { background:#f44336; color:white; }
 
 <header>Lambeth PNC</header>
 
-<!-- MET Login -->
+<!-- LOGIN SCREENS -->
 <main id="loginMETPage">
   <h2>MET Officer Login</h2>
   <input type="text" id="metUsername" placeholder="Username"><br><br>
@@ -38,35 +38,43 @@ button.deleteBtn { background:#f44336; color:white; }
   <input type="text" id="metCollar" placeholder="Collar Number"><br><br>
   <button onclick="loginMET()">Login</button>
   <button onclick="showCivilianLogin()">Switch to Civilian Login</button>
+  <button onclick="showMETRegister()">Register MET Account</button>
   <p class="error" id="metLoginError"></p>
 </main>
 
-<!-- Civilian Login -->
 <main id="loginCivilPage" class="section">
   <h2>Civilian Login</h2>
   <input type="text" id="civilUsername" placeholder="Username"><br><br>
   <input type="password" id="civilPassword" placeholder="Password"><br><br>
   <button onclick="loginCivil()">Login</button>
   <button onclick="showMETLogin()">Switch to MET Login</button>
+  <button onclick="showCivilianRegister()">Register Civilian Account</button>
   <p class="error" id="civilLoginError"></p>
 </main>
 
-<!-- Registration -->
-<main id="registerPage" class="section">
-  <h2>Register Account</h2>
-  <select id="regType">
-    <option value="MET">MET Officer</option>
-    <option value="Civilian">Civilian</option>
-  </select><br><br>
-  <input type="text" id="regUsername" placeholder="Username"><br><br>
-  <input type="password" id="regPassword" placeholder="Password"><br><br>
-  <input type="text" id="regCollar" placeholder="Collar Number (MET only)"><br><br>
-  <button onclick="register()">Create Account</button>
-  <button onclick="showMETLogin()">Back to Login</button>
-  <p class="error" id="regError"></p>
+<!-- REGISTRATION SCREENS -->
+<main id="registerMETPage" class="section">
+  <h2>MET Officer Registration</h2>
+  <input type="text" id="regMETUsername" placeholder="Username"><br><br>
+  <input type="password" id="regMETPassword" placeholder="Password"><br><br>
+  <input type="text" id="regMETCollar" placeholder="Collar Number"><br><br>
+  <button onclick="registerMET()">Create MET Account</button>
+  <button onclick="showCivilianRegister()">Switch to Civilian Registration</button>
+  <button onclick="showMETLogin()">Back to MET Login</button>
+  <p class="error" id="regMETError"></p>
 </main>
 
-<!-- Dashboard -->
+<main id="registerCivilPage" class="section">
+  <h2>Civilian Registration</h2>
+  <input type="text" id="regCivilUsername" placeholder="Username"><br><br>
+  <input type="password" id="regCivilPassword" placeholder="Password"><br><br>
+  <button onclick="registerCivil()">Create Civilian Account</button>
+  <button onclick="showMETRegister()">Switch to MET Registration</button>
+  <button onclick="showCivilianLogin()">Back to Civilian Login</button>
+  <p class="error" id="regCivilError"></p>
+</main>
+
+<!-- DASHBOARD -->
 <main id="dashboardPage" class="section">
   <nav>
     <button onclick="showSection('ocs')">OCs</button>
@@ -87,8 +95,8 @@ button.deleteBtn { background:#f44336; color:white; }
     <button class="addBtn" onclick="createOC()">Add New OC</button>
   </section>
 
-  <!-- Sections (Reports, Vehicles, Personal Info, etc.) -->
-  <!-- ... same as previous full HTML ... -->
+  <!-- Sections for Reports, Vehicles, Personal Info, etc. -->
+  <!-- You can keep all previous sections from your earlier PNC HTML -->
 </main>
 
 <button id="logoutBtn" onclick="logout()">Logout</button>
@@ -101,27 +109,38 @@ let currentOC = null;
 function getUsers(){return JSON.parse(localStorage.getItem('users'))||{}}
 function saveUsers(users){localStorage.setItem('users',JSON.stringify(users));}
 
-// Switch Login Screens
-function showMETLogin(){document.getElementById('loginMETPage').classList.remove('section');document.getElementById('loginCivilPage').classList.add('section');document.getElementById('registerPage').classList.add('section');}
-function showCivilianLogin(){document.getElementById('loginCivilPage').classList.remove('section');document.getElementById('loginMETPage').classList.add('section');document.getElementById('registerPage').classList.add('section');}
-function showRegister(){document.getElementById('registerPage').classList.remove('section');document.getElementById('loginMETPage').classList.add('section');document.getElementById('loginCivilPage').classList.add('section');}
+// ===== Switch login screens =====
+function showMETLogin(){document.getElementById('loginMETPage').classList.remove('section');document.getElementById('loginCivilPage').classList.add('section');document.getElementById('registerMETPage').classList.add('section');document.getElementById('registerCivilPage').classList.add('section');}
+function showCivilianLogin(){document.getElementById('loginCivilPage').classList.remove('section');document.getElementById('loginMETPage').classList.add('section');document.getElementById('registerMETPage').classList.add('section');document.getElementById('registerCivilPage').classList.add('section');}
 
-// Registration
-function register(){
-  const u=document.getElementById('regUsername').value.trim();
-  const p=document.getElementById('regPassword').value;
-  const type=document.getElementById('regType').value;
-  const collar=document.getElementById('regCollar').value.trim();
+// ===== Switch registration screens =====
+function showMETRegister(){document.getElementById('registerMETPage').classList.remove('section');document.getElementById('registerCivilPage').classList.add('section');document.getElementById('loginMETPage').classList.add('section');document.getElementById('loginCivilPage').classList.add('section');}
+function showCivilianRegister(){document.getElementById('registerCivilPage').classList.remove('section');document.getElementById('registerMETPage').classList.add('section');document.getElementById('loginMETPage').classList.add('section');document.getElementById('loginCivilPage').classList.add('section');}
+
+// ===== Registration =====
+function registerMET(){
+  const u=document.getElementById('regMETUsername').value.trim();
+  const p=document.getElementById('regMETPassword').value;
+  const collar=document.getElementById('regMETCollar').value.trim();
   const users=getUsers();
-  if(!u||!p){document.getElementById('regError').innerText='Enter username & password';return;}
-  if(users[u]){document.getElementById('regError').innerText='Username exists';return;}
-  if(type==='MET'&&!collar){document.getElementById('regError').innerText='Collar number required for MET';return;}
-  users[u]={password:p,type:type,collar:type==='MET'?collar:'',OCs:[]};
-  saveUsers(users);
-  document.getElementById('regError').innerText='Account created! Login now.';
+  if(!u||!p){document.getElementById('regMETError').innerText='Enter username & password';return;}
+  if(!collar){document.getElementById('regMETError').innerText='Collar number required';return;}
+  if(users[u]){document.getElementById('regMETError').innerText='Username exists';return;}
+  users[u]={password:p,type:'MET',collar:collar,OCs:[]};
+  saveUsers(users);document.getElementById('regMETError').innerText='Account created! Login now.';
 }
 
-// MET Login
+function registerCivil(){
+  const u=document.getElementById('regCivilUsername').value.trim();
+  const p=document.getElementById('regCivilPassword').value;
+  const users=getUsers();
+  if(!u||!p){document.getElementById('regCivilError').innerText='Enter username & password';return;}
+  if(users[u]){document.getElementById('regCivilError').innerText='Username exists';return;}
+  users[u]={password:p,type:'Civilian',collar:'',OCs:[]};
+  saveUsers(users);document.getElementById('regCivilError').innerText='Account created! Login now.';
+}
+
+// ===== Login =====
 function loginMET(){
   const u=document.getElementById('metUsername').value.trim();
   const p=document.getElementById('metPassword').value;
@@ -132,7 +151,6 @@ function loginMET(){
   currentUser=u;localStorage.setItem('currentUser',u);openDashboard();
 }
 
-// Civilian Login
 function loginCivil(){
   const u=document.getElementById('civilUsername').value.trim();
   const p=document.getElementById('civilPassword').value;
@@ -142,11 +160,11 @@ function loginCivil(){
 }
 
 // ===== Dashboard & Logout =====
-function openDashboard(){document.getElementById('loginMETPage').classList.add('section');document.getElementById('loginCivilPage').classList.add('section');document.getElementById('registerPage').classList.add('section');document.getElementById('dashboardPage').classList.remove('section');loadOCList();}
+function openDashboard(){document.getElementById('loginMETPage').classList.add('section');document.getElementById('loginCivilPage').classList.add('section');document.getElementById('registerMETPage').classList.add('section');document.getElementById('registerCivilPage').classList.add('section');document.getElementById('dashboardPage').classList.remove('section');loadOCList();}
 function logout(){currentUser=null;localStorage.removeItem('currentUser');showMETLogin();}
 
 // ===== OC & PNC functions =====
-// ... keep all previous OC, tables, add/edit/delete functions as before ...
+// Include all your previous OC, tables, add/edit/delete functions here
 </script>
 
 </body>
