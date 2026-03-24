@@ -76,6 +76,7 @@ button.deleteBtn { background:#f44336; color:white; }
   <label>Select OC: <select id="ocSelectView" onchange="loadOCDataView()"></select></label><br><br>
   <div id="ocInfoView" class="panel"></div>
   <button id="makeCallBtn" onclick="showCallForm()">Make a Call</button>
+  <button onclick="showCreateOCForm()">Create OC</button>
 </main>
 
 <!-- DASHBOARD EDIT (MET ONLY) -->
@@ -122,16 +123,19 @@ button.deleteBtn { background:#f44336; color:white; }
 
 <script>
 // ===== USERS =====
-let currentUser = localStorage.getItem('currentUser')||null;
-function getUsers(){return JSON.parse(localStorage.getItem('users'))||{}}
-function saveUsers(u){localStorage.setItem('users',JSON.stringify(u));}
+let currentUser = JSON.parse(localStorage.getItem('currentUser')) || null;
+
+function getUsers(){ return JSON.parse(localStorage.getItem('users'))||{} }
+function saveUsers(u){ localStorage.setItem('users',JSON.stringify(u)) }
 
 // ===== LOGIN/REGISTER SWITCH =====
-function hideAll(){['loginMETPage','loginCivilPage','registerMETPage','registerCivilPage','dashboardView','dashboardEdit','createOCFormPage','civCallPage','metCallDashboard'].forEach(id=>document.getElementById(id).classList.add('section'));}
-function showMETLogin(){hideAll();document.getElementById('loginMETPage').classList.remove('section');}
-function showCivilianLogin(){hideAll();document.getElementById('loginCivilPage').classList.remove('section');}
-function showMETRegister(){hideAll();document.getElementById('registerMETPage').classList.remove('section');}
-function showCivilianRegister(){hideAll();document.getElementById('registerCivilPage').classList.remove('section');}
+function hideAll(){
+  ['loginMETPage','loginCivilPage','registerMETPage','registerCivilPage','dashboardView','dashboardEdit','createOCFormPage','civCallPage','metCallDashboard'].forEach(id=>document.getElementById(id).classList.add('section'));
+}
+function showMETLogin(){ hideAll(); document.getElementById('loginMETPage').classList.remove('section'); }
+function showCivilianLogin(){ hideAll(); document.getElementById('loginCivilPage').classList.remove('section'); }
+function showMETRegister(){ hideAll(); document.getElementById('registerMETPage').classList.remove('section'); }
+function showCivilianRegister(){ hideAll(); document.getElementById('registerCivilPage').classList.remove('section'); }
 
 // ===== REGISTRATION =====
 function registerMET(){
@@ -163,26 +167,32 @@ function loginMET(){
   const users=getUsers();
   if(!users[u]||users[u].password!==p||users[u].type!=='MET'){document.getElementById('metLoginError').innerText='Invalid username/password';return;}
   if(users[u].collar!==c){document.getElementById('metLoginError').innerText='Invalid collar number';return;}
-  currentUser=u;localStorage.setItem('currentUser',u);openDashboard();
+  currentUser={username:u,type:'MET'}; localStorage.setItem('currentUser',JSON.stringify(currentUser));
+  openDashboard();
 }
 function loginCivil(){
   const u=document.getElementById('civilUsername').value.trim();
   const p=document.getElementById('civilPassword').value;
   const users=getUsers();
   if(!users[u]||users[u].password!==p||users[u].type!=='Civilian'){document.getElementById('civilLoginError').innerText='Invalid username/password';return;}
-  currentUser=u;localStorage.setItem('currentUser',u);openDashboard();
+  currentUser={username:u,type:'Civilian'}; localStorage.setItem('currentUser',JSON.stringify(currentUser));
+  openDashboard();
 }
 
 // ===== DASHBOARD =====
 function openDashboard(){
-  const users=getUsers(); const user=users[currentUser]; if(!user) return;
+  const users=getUsers();
+  if(!currentUser) return;
+  const user=users[currentUser.username]; if(!user) return;
   hideAll();
   document.getElementById('dashboardView').classList.remove('section');
-  if(user.type==='MET'){document.getElementById('dashboardEdit').classList.remove('section');}
-  else{document.getElementById('createOCBtn')?.remove();}
-  loadOCList('View'); if(user.type==='MET') loadOCList('Edit');
+  if(currentUser.type==='MET'){document.getElementById('dashboardEdit').classList.remove('section');}
+  else{document.getElementById('createOCFormPage').classList.add('section');}
+  loadOCList('View');
+  if(currentUser.type==='MET') loadOCList('Edit');
 }
-function logout(){currentUser=null;localStorage.removeItem('currentUser');showMETLogin();}
+
+function logout(){currentUser=null;localStorage.removeItem('currentUser');hideAll();showMETLogin();}
 
 // ===== OC FUNCTIONS =====
 function loadOCList(mode){
@@ -263,5 +273,4 @@ function submitCall(){
 }
 
 function showCallsDashboard(){
-  hideAll(); document.getElementById('metCallDashboard').classList.remove('section');
-  const calls=JSON.parse(localStorage
+  hideAll(); document.getElementById('
