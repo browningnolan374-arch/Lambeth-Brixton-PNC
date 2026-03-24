@@ -14,9 +14,8 @@ nav button:hover { background:#3a6fc0; }
 h2 { background:#0b3d91; padding:10px; border-radius:4px; margin-top:0; }
 .panel { background:#1e1e1e; padding:10px; border-radius:4px; margin-bottom:15px; box-shadow:0 2px 4px rgba(0,0,0,0.5); }
 input, select, textarea { padding:5px; margin-right:5px; margin-top:5px; border-radius:3px; border:none; background:#2b2b2b; color:#eee; width:90%; }
-button.addBtn { background:#0b3d91; color:white; border:none; padding:5px 10px; cursor:pointer; border-radius:3px; margin-top:5px; }
-button.addBtn:hover { background:#3a6fc0; }
-button.editBtn, button.deleteBtn { padding:3px 6px; margin-right:3px; cursor:pointer; border-radius:3px; border:none; }
+button.addBtn, button { background:#0b3d91; color:white; border:none; padding:5px 10px; cursor:pointer; border-radius:3px; margin-top:5px; }
+button.addBtn:hover, button:hover { background:#3a6fc0; }
 button.editBtn { background:#4caf50; color:white; }
 button.deleteBtn { background:#f44336; color:white; }
 .error { color:red; margin-top:5px; }
@@ -74,40 +73,67 @@ button.deleteBtn { background:#f44336; color:white; }
 <!-- DASHBOARD VIEW (READ-ONLY) -->
 <main id="dashboardView" class="section">
   <h2>OC Records (View Only)</h2>
-  <label>Select OC: <select id="ocSelectView" onchange="loadOCDataView()"></select></label>
+  <label>Select OC: <select id="ocSelectView" onchange="loadOCDataView()"></select></label><br><br>
   <div id="ocInfoView" class="panel"></div>
+  <button id="makeCallBtn" onclick="showCallForm()">Make a Call</button>
 </main>
 
 <!-- DASHBOARD EDIT (MET ONLY) -->
 <main id="dashboardEdit" class="section">
   <h2>OC Records (Edit Mode)</h2>
-  <label>Select OC: <select id="ocSelectEdit" onchange="loadOCDataEdit()"></select></label>
-  <button class="addBtn" id="createOCBtn" onclick="createOC()">Add New OC</button>
+  <label>Select OC: <select id="ocSelectEdit" onchange="loadOCDataEdit()"></select></label><br><br>
   <div id="ocInfoEdit" class="panel"></div>
+  <button onclick="showCallsDashboard()">View Calls</button>
+</main>
+
+<!-- CREATE OC FORM (CIV ONLY) -->
+<main id="createOCFormPage" class="section">
+  <h2>Create New OC</h2>
+  <label>RP Name:<br><input type="text" id="newOCName"></label><br><br>
+  <label>RP Birthday:<br><input type="date" id="newOCBirthday"></label><br><br>
+  <label>RP Address:<br><input type="text" id="newOCAddress"></label><br><br>
+  <label>Gender:<br><input type="text" id="newOCGender"></label><br><br>
+  <label>Ethnicity:<br><input type="text" id="newOCEthnicity"></label><br><br>
+  <label>Distinguishing Marks:<br><input type="text" id="newOCDistMarks"></label><br><br>
+  <button onclick="submitNewOC()">Create OC</button>
+  <button onclick="cancelNewOC()">Cancel</button>
+  <p class="error" id="newOCError"></p>
+</main>
+
+<!-- CIVILIAN CALL FORM -->
+<main id="civCallPage" class="section">
+  <h2>Submit a Call</h2>
+  <label>Caller Name:<br><input type="text" id="callName"></label><br><br>
+  <label>Incident Type:<br><input type="text" id="callType"></label><br><br>
+  <label>Location:<br><input type="text" id="callLocation"></label><br><br>
+  <label>Description:<br><textarea id="callDesc"></textarea></label><br><br>
+  <button onclick="submitCall()">Submit Call</button>
+  <button onclick="cancelCallForm()">Cancel</button>
+  <p class="error" id="callError"></p>
+</main>
+
+<!-- MET CALLS DASHBOARD -->
+<main id="metCallDashboard" class="section">
+  <h2>Incoming Calls</h2>
+  <div id="callsList" class="panel"></div>
 </main>
 
 <button id="logoutBtn" onclick="logout()">Logout</button>
 
 <script>
-// ===== Users & Login =====
-let currentUser = localStorage.getItem('currentUser') || null;
-
+// ===== USERS =====
+let currentUser = localStorage.getItem('currentUser')||null;
 function getUsers(){return JSON.parse(localStorage.getItem('users'))||{}}
-function saveUsers(users){localStorage.setItem('users',JSON.stringify(users));}
+function saveUsers(u){localStorage.setItem('users',JSON.stringify(u));}
 
-// ===== Switch login screens =====
+// ===== LOGIN/REGISTER SWITCH =====
+function hideAll(){['loginMETPage','loginCivilPage','registerMETPage','registerCivilPage','dashboardView','dashboardEdit','createOCFormPage','civCallPage','metCallDashboard'].forEach(id=>document.getElementById(id).classList.add('section'));}
 function showMETLogin(){hideAll();document.getElementById('loginMETPage').classList.remove('section');}
 function showCivilianLogin(){hideAll();document.getElementById('loginCivilPage').classList.remove('section');}
 function showMETRegister(){hideAll();document.getElementById('registerMETPage').classList.remove('section');}
 function showCivilianRegister(){hideAll();document.getElementById('registerCivilPage').classList.remove('section');}
 
-function hideAll(){
-  ['loginMETPage','loginCivilPage','registerMETPage','registerCivilPage','dashboardView','dashboardEdit'].forEach(id=>{
-    document.getElementById(id).classList.add('section');
-  });
-}
-
-// ===== Registration =====
+// ===== REGISTRATION =====
 function registerMET(){
   const u=document.getElementById('regMETUsername').value.trim();
   const p=document.getElementById('regMETPassword').value;
@@ -119,7 +145,6 @@ function registerMET(){
   users[u]={password:p,type:'MET',collar:collar,OCs:[]};
   saveUsers(users);document.getElementById('regMETError').innerText='Account created! Login now.';
 }
-
 function registerCivil(){
   const u=document.getElementById('regCivilUsername').value.trim();
   const p=document.getElementById('regCivilPassword').value;
@@ -130,116 +155,113 @@ function registerCivil(){
   saveUsers(users);document.getElementById('regCivilError').innerText='Account created! Login now.';
 }
 
-// ===== Login =====
+// ===== LOGIN =====
 function loginMET(){
   const u=document.getElementById('metUsername').value.trim();
   const p=document.getElementById('metPassword').value;
-  const collar=document.getElementById('metCollar').value.trim();
+  const c=document.getElementById('metCollar').value.trim();
   const users=getUsers();
-  if(!users[u]||users[u].password!==p||users[u].type!=='MET'){document.getElementById('metLoginError').innerText='Invalid username or password';return;}
-  if(users[u].collar!==collar){document.getElementById('metLoginError').innerText='Invalid collar number';return;}
+  if(!users[u]||users[u].password!==p||users[u].type!=='MET'){document.getElementById('metLoginError').innerText='Invalid username/password';return;}
+  if(users[u].collar!==c){document.getElementById('metLoginError').innerText='Invalid collar number';return;}
   currentUser=u;localStorage.setItem('currentUser',u);openDashboard();
 }
-
 function loginCivil(){
   const u=document.getElementById('civilUsername').value.trim();
   const p=document.getElementById('civilPassword').value;
   const users=getUsers();
-  if(!users[u]||users[u].password!==p||users[u].type!=='Civilian'){document.getElementById('civilLoginError').innerText='Invalid username or password';return;}
+  if(!users[u]||users[u].password!==p||users[u].type!=='Civilian'){document.getElementById('civilLoginError').innerText='Invalid username/password';return;}
   currentUser=u;localStorage.setItem('currentUser',u);openDashboard();
 }
 
-// ===== Dashboard =====
+// ===== DASHBOARD =====
 function openDashboard(){
-  const users = getUsers();
-  const user = users[currentUser];
-  if(!user) return;
-
+  const users=getUsers(); const user=users[currentUser]; if(!user) return;
   hideAll();
-
-  // Show read-only view for all
   document.getElementById('dashboardView').classList.remove('section');
-  loadOCList('View');
-
-  if(user.type==='MET'){
-    document.getElementById('dashboardEdit').classList.remove('section');
-    loadOCList('Edit');
-  } else {
-    document.getElementById('dashboardEdit').classList.add('section');
-  }
+  if(user.type==='MET'){document.getElementById('dashboardEdit').classList.remove('section');}
+  else{document.getElementById('createOCBtn')?.remove();}
+  loadOCList('View'); if(user.type==='MET') loadOCList('Edit');
 }
-
 function logout(){currentUser=null;localStorage.removeItem('currentUser');showMETLogin();}
 
-// ===== OC Functions =====
+// ===== OC FUNCTIONS =====
 function loadOCList(mode){
-  const OCs = JSON.parse(localStorage.getItem('OCs')||'{}');
-  const ocSelectView = document.getElementById('ocSelectView');
-  const ocSelectEdit = document.getElementById('ocSelectEdit');
-
-  ocSelectView.innerHTML='';
-  if(ocSelectEdit) ocSelectEdit.innerHTML='';
-
-  Object.keys(OCs).forEach(oc=>{
-    const opt1=document.createElement('option'); opt1.value=oc; opt1.innerText=oc; ocSelectView.appendChild(opt1);
-    if(ocSelectEdit){ const opt2=document.createElement('option'); opt2.value=oc; opt2.innerText=oc; ocSelectEdit.appendChild(opt2);}
+  const OCs=JSON.parse(localStorage.getItem('OCs')||'{}');
+  const selView=document.getElementById('ocSelectView');
+  const selEdit=document.getElementById('ocSelectEdit');
+  if(selView) selView.innerHTML=''; if(selEdit) selEdit.innerHTML='';
+  Object.keys(OCs).forEach(o=>{
+    if(selView){let opt=document.createElement('option');opt.value=o;opt.innerText=o;selView.appendChild(opt);}
+    if(selEdit){let opt=document.createElement('option');opt.value=o;opt.innerText=o;selEdit.appendChild(opt);}
   });
-
-  if(Object.keys(OCs).length>0){
-    if(mode==='View') loadOCDataView();
-    else if(mode==='Edit') loadOCDataEdit();
-  }
-}
-
-function createOC(){
-  const ocName = prompt("Enter OC Name:");
-  if(!ocName) return;
-
-  const OCs = JSON.parse(localStorage.getItem('OCs')||'{}');
-  if(OCs[ocName]) { alert("OC exists!"); return; }
-
-  OCs[ocName]={personal:{},convictions:{},arrests:{},reports:[],vehicles:[]};
-  localStorage.setItem('OCs',JSON.stringify(OCs));
-  loadOCList('Edit');
-  alert("OC Created!");
+  if(mode==='View') loadOCDataView(); else if(mode==='Edit') loadOCDataEdit();
 }
 
 function loadOCDataView(){
-  const ocSelect=document.getElementById('ocSelectView');
-  const ocName=ocSelect.value;
+  const o=document.getElementById('ocSelectView').value;
   const OCs=JSON.parse(localStorage.getItem('OCs')||'{}');
-  if(!OCs[ocName]) return;
-  document.getElementById('ocInfoView').innerText = JSON.stringify(OCs[ocName],null,2);
+  if(!OCs[o]) return;
+  document.getElementById('ocInfoView').innerText=JSON.stringify(OCs[o],null,2);
 }
 
 function loadOCDataEdit(){
-  const ocSelect=document.getElementById('ocSelectEdit');
-  const ocName=ocSelect.value;
+  const o=document.getElementById('ocSelectEdit').value;
   const OCs=JSON.parse(localStorage.getItem('OCs')||'{}');
-  if(!OCs[ocName]) return;
-
+  if(!OCs[o]) return;
   const div=document.getElementById('ocInfoEdit');
-  div.innerHTML = `
+  div.innerHTML=`
     <h3>Personal Info</h3>
-    Name:<input value="${OCs[ocName].personal.name||''}" onchange="updateOC('${ocName}','personal','name',this.value)"><br>
-    DOB:<input value="${OCs[ocName].personal.dob||''}" onchange="updateOC('${ocName}','personal','dob',this.value)"><br>
-    Gender:<input value="${OCs[ocName].personal.gender||''}" onchange="updateOC('${ocName}','personal','gender',this.value)"><br>
-    <h3>Convictions</h3>
-    <textarea onchange="updateOC('${ocName}','convictions','text',this.value)">${OCs[ocName].convictions.text||''}</textarea><br>
-    <h3>Reports</h3>
-    <textarea onchange="updateOC('${ocName}','reports','text',this.value)">${OCs[ocName].reports.join('\n')||''}</textarea><br>
-    <h3>Vehicles</h3>
-    <textarea onchange="updateOC('${ocName}','vehicles','text',this.value)">${OCs[ocName].vehicles.join('\n')||''}</textarea>
+    Name:<input value="${OCs[o].personal.name||''}" onchange="updateOC('${o}','personal','name',this.value)"><br>
+    DOB:<input value="${OCs[o].personal.dob||''}" onchange="updateOC('${o}','personal','dob',this.value)"><br>
+    Address:<input value="${OCs[o].personal.address||''}" onchange="updateOC('${o}','personal','address',this.value)"><br>
+    Gender:<input value="${OCs[o].personal.gender||''}" onchange="updateOC('${o}','personal','gender',this.value)"><br>
+    Ethnicity:<input value="${OCs[o].personal.ethnicity||''}" onchange="updateOC('${o}','personal','ethnicity',this.value)"><br>
+    Marks:<input value="${OCs[o].personal.marks||''}" onchange="updateOC('${o}','personal','marks',this.value)"><br>
+    <h3>Convictions</h3><textarea onchange="updateOC('${o}','convictions','text',this.value)">${OCs[o].convictions.text||''}</textarea><br>
+    <h3>Reports</h3><textarea onchange="updateOC('${o}','reports','text',this.value)">${OCs[o].reports.join('\n')||''}</textarea><br>
+    <h3>Vehicles</h3><textarea onchange="updateOC('${o}','vehicles','text',this.value)">${OCs[o].vehicles.join('\n')||''}</textarea>
   `;
 }
 
-function updateOC(ocName, section, key, value){
+function updateOC(o,sec,key,val){
   const OCs=JSON.parse(localStorage.getItem('OCs')||'{}');
-  if(section==='reports'||section==='vehicles') OCs[ocName][section]=value.split('\n');
-  else OCs[ocName][section][key]=value;
+  if(sec==='reports'||sec==='vehicles') OCs[o][sec]=val.split('\n'); else OCs[o][sec][key]=val;
   localStorage.setItem('OCs',JSON.stringify(OCs));
 }
-</script>
 
-</body>
-</html>
+// ===== CIV CREATE OC FORM =====
+function showCreateOCForm(){hideAll();document.getElementById('createOCFormPage').classList.remove('section');}
+function cancelNewOC(){document.getElementById('createOCFormPage').classList.add('section'); openDashboard();}
+function submitNewOC(){
+  const name=document.getElementById('newOCName').value.trim();
+  const dob=document.getElementById('newOCBirthday').value.trim();
+  const addr=document.getElementById('newOCAddress').value.trim();
+  const gender=document.getElementById('newOCGender').value.trim();
+  const eth=document.getElementById('newOCEthnicity').value.trim();
+  const marks=document.getElementById('newOCDistMarks').value.trim();
+  if(!name||!dob||!addr){document.getElementById('newOCError').innerText='Name, Birthday & Address required';return;}
+  const OCs=JSON.parse(localStorage.getItem('OCs')||'{}');
+  if(OCs[name]){document.getElementById('newOCError').innerText='OC exists';return;}
+  OCs[name]={personal:{name,dob,address:addr,gender,ethnicity:eth,marks},convictions:{},arrests:{},reports:[],vehicles:[]};
+  localStorage.setItem('OCs',JSON.stringify(OCs));
+  alert('OC Created!'); cancelNewOC();
+}
+
+// ===== CALLS =====
+function showCallForm(){hideAll();document.getElementById('civCallPage').classList.remove('section');}
+function cancelCallForm(){document.getElementById('civCallPage').classList.add('section'); openDashboard();}
+function submitCall(){
+  const name=document.getElementById('callName').value.trim();
+  const type=document.getElementById('callType').value.trim();
+  const loc=document.getElementById('callLocation').value.trim();
+  const desc=document.getElementById('callDesc').value.trim();
+  if(!name||!type||!loc){document.getElementById('callError').innerText='Fill all required fields';return;}
+  let calls=JSON.parse(localStorage.getItem('calls')||'[]');
+  calls.push({caller:name,type:type,location:loc,description:desc,status:'Pending',timestamp:new Date().toLocaleString()});
+  localStorage.setItem('calls',JSON.stringify(calls));
+  alert('Call submitted!'); cancelCallForm();
+}
+
+function showCallsDashboard(){
+  hideAll(); document.getElementById('metCallDashboard').classList.remove('section');
+  const calls=JSON.parse(localStorage
