@@ -1,0 +1,330 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Lambeth PNC</title>
+
+<style>
+body { margin:0; font-family:Arial; background:#121212; color:#eee; }
+
+header {
+  background:#0b3d91;
+  padding:15px;
+  text-align:center;
+  font-size:24px;
+}
+
+/* MET NAV */
+nav {
+  display:flex;
+  justify-content:center;
+  gap:10px;
+  background:#0a2c70;
+  padding:10px;
+}
+
+nav button {
+  background:#1a4dab;
+  border:none;
+  padding:8px 15px;
+  color:white;
+  cursor:pointer;
+  border-radius:4px;
+}
+
+/* SECTIONS */
+.section { display:none; padding:20px; }
+
+input {
+  padding:8px;
+  margin:5px;
+  background:#2b2b2b;
+  border:none;
+  color:white;
+}
+
+button {
+  padding:8px 12px;
+  background:#0b3d91;
+  border:none;
+  color:white;
+  cursor:pointer;
+}
+
+.card {
+  background:#1e1e1e;
+  padding:10px;
+  margin-top:10px;
+  border-left:4px solid #0b3d91;
+}
+
+/* CIV UI */
+.civilBox {
+  padding:20px;
+}
+
+.civilTabs button {
+  margin:5px;
+}
+
+</style>
+</head>
+
+<body>
+
+<header>Lambeth PNC</header>
+
+<!-- MET NAV -->
+<nav id="metNav">
+<button onclick="showSection('lookup')">Lookup</button>
+<button onclick="showSection('vehicles')">Vehicles</button>
+<button onclick="showSection('warrants')">Warrants</button>
+<button onclick="logout()">Logout</button>
+</nav>
+
+<!-- MET SYSTEM -->
+<div id="lookup" class="section">
+<input id="searchName" placeholder="Name">
+<button onclick="searchPerson()">Search</button>
+<div id="personResult"></div>
+</div>
+
+<div id="vehicles" class="section">
+<input id="searchPlate" placeholder="Plate">
+<button onclick="searchVehicle()">Search</button>
+<div id="vehicleResult"></div>
+</div>
+
+<div id="warrants" class="section">
+<h2>Warrants</h2>
+<div id="warrantList"></div>
+
+<input id="warrantName" placeholder="Name">
+<input id="warrantReason" placeholder="Reason">
+<button onclick="createWarrant()">Create</button>
+</div>
+
+<!-- CIVILIAN UI -->
+<div id="civilianUI" style="display:none;">
+
+<div class="civilBox">
+
+<div class="civilTabs">
+<button onclick="showCivilTab('list')">OCs</button>
+<button onclick="showCivilTab('create')">Create OC</button>
+<button onclick="logout()">Logout</button>
+</div>
+
+<!-- OC LIST -->
+<div id="listTab" class="civilSection">
+<select id="ocSelect"></select>
+<div id="civilContent"></div>
+</div>
+
+<!-- OC CREATE -->
+<div id="createTab" class="civilSection" style="display:none;">
+<input id="ocName" placeholder="Name"><br>
+<input id="ocBirthday" type="date"><br>
+<input id="ocAddress" placeholder="Address"><br>
+<input id="ocGender" placeholder="Gender"><br>
+<input id="ocMarks" placeholder="Marks"><br>
+<button onclick="createOC()">Create</button>
+</div>
+
+</div>
+</div>
+
+<script>
+const API = "/api/storage";
+
+let user = JSON.parse(localStorage.getItem("currentUser"));
+if(!user) location.href="index.html";
+
+//////////////////////////////////////////////////
+// STORAGE
+//////////////////////////////////////////////////
+
+async function getData(k){
+  const r = await fetch(API+"?key="+k);
+  const d = await r.json();
+  return d.value||[];
+}
+
+async function saveData(k,v){
+  await fetch(API,{
+    method:"POST",
+    headers:{"Content-Type":"application/json"},
+    body:JSON.stringify({key:k,value:v})
+  });
+}
+
+//////////////////////////////////////////////////
+// INIT (THIS FIXES EVERYTHING)
+//////////////////////////////////////////////////
+
+document.addEventListener("DOMContentLoaded", () => {
+
+  if(user.type === "MET"){
+    metNav.style.display = "flex";
+    showSection("lookup");
+    loadWarrants();
+  } else {
+    metNav.style.display = "none";
+    civilianUI.style.display = "block";
+    loadCivil();
+    showCivilTab("list");
+  }
+
+});
+
+//////////////////////////////////////////////////
+// NAV
+//////////////////////////////////////////////////
+
+function showSection(id){
+  document.querySelectorAll(".section").forEach(s=>s.style.display="none");
+  document.getElementById(id).style.display="block";
+}
+
+function logout(){
+  localStorage.removeItem("currentUser");
+  location.href="index.html";
+}
+
+//////////////////////////////////////////////////
+// MET SYSTEM
+//////////////////////////////////////////////////
+
+async function searchPerson(){
+  let OCs = await getData("OCs");
+  const name = searchName.value.toLowerCase();
+
+  const found = OCs.filter(o=>o.name.toLowerCase().includes(name));
+
+  personResult.innerHTML="";
+  found.forEach(o=>{
+    personResult.innerHTML+=`
+    <div class="card">
+    ${o.name}<br>${o.address}
+    <button onclick="quickWarrant('${o.name}')">Warrant</button>
+    </div>`;
+  });
+}
+
+async function searchVehicle(){
+  let users = await getData("users");
+  let found=null;
+
+  for(const u in users){
+    (users[u].vehicles||[]).forEach(v=>{
+      if(v.plate===searchPlate.value) found=v;
+    });
+  }
+
+  vehicleResult.innerHTML = found ?
+  `<div class="card">${found.plate} - ${found.reason}</div>` :
+  "Not found";
+}
+
+async function createWarrant(){
+  let w = await getData("warrants");
+
+  w.push({
+    name:warrantName.value,
+    reason:warrantReason.value,
+    officer:user.username
+  });
+
+  await saveData("warrants",w);
+  loadWarrants();
+}
+
+async function loadWarrants(){
+  let w = await getData("warrants");
+
+  warrantList.innerHTML="";
+  w.forEach((x,i)=>{
+    warrantList.innerHTML+=`
+    <div class="card">
+    ${x.name} - ${x.reason}
+    <button onclick="deleteWarrant(${i})">Delete</button>
+    </div>`;
+  });
+}
+
+async function deleteWarrant(i){
+  let w = await getData("warrants");
+  w.splice(i,1);
+  await saveData("warrants",w);
+  loadWarrants();
+}
+
+function quickWarrant(name){
+  warrantName.value = name;
+  showSection("warrants");
+}
+
+//////////////////////////////////////////////////
+// CIV SYSTEM
+//////////////////////////////////////////////////
+
+function showCivilTab(tab){
+  document.querySelectorAll(".civilSection").forEach(s=>s.style.display="none");
+
+  if(tab==="list") listTab.style.display="block";
+  if(tab==="create") createTab.style.display="block";
+}
+
+async function loadCivil(){
+  let OCs = await getData("OCs");
+  let mine = OCs.filter(o=>o.createdBy===user.username);
+
+  ocSelect.innerHTML="";
+  mine.forEach((o,i)=>{
+    ocSelect.innerHTML+=`<option value="${i}">${o.name}</option>`;
+  });
+
+  ocSelect.onchange = ()=>showCivil(mine[ocSelect.value]);
+
+  if(mine.length) showCivil(mine[0]);
+}
+
+function showCivil(o){
+  civilContent.innerHTML=`
+  <div class="card">
+  ${o.name}<br>
+  DOB: ${o.birthday}<br>
+  Address: ${o.address}<br>
+  Gender: ${o.gender}<br>
+  Marks: ${o.marks}
+  </div>`;
+}
+
+async function createOC(){
+  let OCs = await getData("OCs");
+
+  const oc = {
+    name:ocName.value,
+    birthday:ocBirthday.value,
+    address:ocAddress.value,
+    gender:ocGender.value,
+    marks:ocMarks.value,
+    createdBy:user.username
+  };
+
+  if(!oc.name || !oc.birthday){
+    alert("Fill required fields");
+    return;
+  }
+
+  OCs.push(oc);
+  await saveData("OCs",OCs);
+
+  alert("Created");
+  loadCivil();
+  showCivilTab("list");
+}
+</script>
+
+</body>
+</html>
