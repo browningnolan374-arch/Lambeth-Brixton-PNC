@@ -1,108 +1,207 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
 <meta charset="UTF-8">
 <title>Lambeth PNC Login</title>
+
 <style>
-body { font-family: Arial,sans-serif; background:#121212; color:#eee; margin:0; padding:0; text-align:center; }
-h2 { margin-top:20px; }
-input, button { padding:8px; margin:5px; border-radius:3px; border:none; }
-button { background:#0b3d91; color:white; cursor:pointer; }
-.error { color:red; }
+body {
+  margin:0;
+  font-family:Arial;
+  background:#121212;
+  color:#eee;
+}
+
+header {
+  background:#0b3d91;
+  padding:15px;
+  text-align:center;
+  font-size:24px;
+  font-weight:bold;
+}
+
+.container {
+  max-width:400px;
+  margin:40px auto;
+  background:#1e1e1e;
+  padding:20px;
+  border-radius:6px;
+}
+
+.tabs {
+  display:flex;
+}
+
+.tabs button {
+  flex:1;
+  padding:10px;
+  border:none;
+  cursor:pointer;
+  background:#1a4dab;
+  color:white;
+}
+
+.tabs .active {
+  background:#3a6fc0;
+}
+
+input {
+  width:100%;
+  padding:8px;
+  margin:5px 0;
+  background:#2b2b2b;
+  border:none;
+  color:white;
+}
+
+button.loginBtn {
+  width:100%;
+  padding:10px;
+  background:#0b3d91;
+  border:none;
+  color:white;
+  margin-top:10px;
+  cursor:pointer;
+}
+
+.error {
+  color:red;
+  text-align:center;
+}
 </style>
 </head>
+
 <body>
-<h2>Lambeth PNC Login</h2>
 
-<div>
-  <button onclick="showLoginForm('MET')" id="metTab" style="background:#0b3d91;">MET Login</button>
-  <button onclick="showLoginForm('Civilian')" id="civilTab" style="background:#1a1a1a;">Civilian Login</button>
+<header>Lambeth PNC Login</header>
+
+<div class="container">
+
+<div class="tabs">
+  <button id="metTab" class="active" onclick="switchTab('MET')">MET</button>
+  <button id="civTab" onclick="switchTab('Civilian')">Civilian</button>
 </div>
 
-<div id="loginMETForm">
-  <input id="loginMETUsername" placeholder="Username"><br>
-  <input id="loginMETPassword" type="password" placeholder="Password"><br>
-  <input id="loginCollar" placeholder="Collar Number"><br>
-  <button onclick="loginMET()">Login</button>
-  <p class="error" id="loginMETError"></p>
+<!-- MET LOGIN -->
+<div id="metLogin">
+<input id="metUser" placeholder="Username">
+<input id="metPass" type="password" placeholder="Password">
+<input id="metCollar" placeholder="Collar Number">
+<button class="loginBtn" onclick="loginMET()">Login</button>
 </div>
 
-<div id="loginCivilForm" style="display:none;">
-  <input id="loginCivilUsername" placeholder="Username"><br>
-  <input id="loginCivilPassword" type="password" placeholder="Password"><br>
-  <button onclick="loginCivil()">Login</button>
-  <p class="error" id="loginCivilError"></p>
+<!-- CIV LOGIN -->
+<div id="civLogin" style="display:none;">
+<input id="civUser" placeholder="Username">
+<input id="civPass" type="password" placeholder="Password">
+<button class="loginBtn" onclick="loginCivil()">Login</button>
 </div>
 
-<h3>Register</h3>
-<button onclick="showRegMET()">Register as MET</button>
-<button onclick="showRegCivil()">Register as Civilian</button>
-<p class="error" id="regError"></p>
+<p id="error" class="error"></p>
+
+</div>
 
 <script>
-// KV helpers
-async function getDataFromKV(key){
-  const res = await fetch(`/api/storage?key=${key}`);
+const API = "/api/storage";
+
+function switchTab(type){
+  document.getElementById("metLogin").style.display = type==="MET" ? "block" : "none";
+  document.getElementById("civLogin").style.display = type==="Civilian" ? "block" : "none";
+
+  document.getElementById("metTab").classList.toggle("active", type==="MET");
+  document.getElementById("civTab").classList.toggle("active", type==="Civilian");
+}
+
+async function getUsers(){
+  const res = await fetch(API + "?key=users");
   const data = await res.json();
   return data.value || {};
 }
-async function saveDataToKV(key,value){
-  await fetch('/api/storage',{
-    method:'POST',
-    headers:{'Content-Type':'application/json'},
-    body: JSON.stringify({key,value})
-  });
-}
 
-// Login form toggle
-function showLoginForm(role){
-  if(role==='MET'){ document.getElementById('loginMETForm').style.display='block'; document.getElementById('loginCivilForm').style.display='none'; }
-  else{ document.getElementById('loginMETForm').style.display='none'; document.getElementById('loginCivilForm').style.display='block'; }
-}
+//////////////////////////////////////////////////
+// MET LOGIN
+//////////////////////////////////////////////////
 
-// Login functions
 async function loginMET(){
-  const u = document.getElementById('loginMETUsername').value.trim();
-  const p = document.getElementById('loginMETPassword').value;
-  const c = document.getElementById('loginCollar').value.trim();
-  const users = await getDataFromKV('users');
-  const err = document.getElementById('loginMETError');
+  const u = document.getElementById("metUser").value.trim();
+  const p = document.getElementById("metPass").value;
+  const c = document.getElementById("metCollar").value.trim();
 
-  if(users[u] && users[u].password===p && users[u].type==='MET'){
-    if(users[u].collar!==c){ err.innerText='Invalid collar number'; return; }
-    sessionStorage.setItem('currentUser',JSON.stringify({username:u,type:'MET'}));
-    window.location.href = 'dashboard.html';
-  } else { err.innerText='Invalid credentials'; }
+  const users = await getUsers();
+
+  if(!users[u]){
+    showError("User not found");
+    return;
+  }
+
+  const user = users[u];
+
+  if(user.type !== "MET"){
+    showError("Not a MET account");
+    return;
+  }
+
+  if(user.password !== p){
+    showError("Wrong password");
+    return;
+  }
+
+  if(user.collar !== c){
+    showError("Invalid collar number");
+    return;
+  }
+
+  // ✅ SAVE LOGIN (THIS FIXES EVERYTHING)
+  localStorage.setItem("currentUser", JSON.stringify({
+    username: u,
+    type: "MET"
+  }));
+
+  // ✅ REDIRECT
+  window.location.href = "dashboard.html";
 }
+
+//////////////////////////////////////////////////
+// CIV LOGIN
+//////////////////////////////////////////////////
 
 async function loginCivil(){
-  const u = document.getElementById('loginCivilUsername').value.trim();
-  const p = document.getElementById('loginCivilPassword').value;
-  const users = await getDataFromKV('users');
-  const err = document.getElementById('loginCivilError');
+  const u = document.getElementById("civUser").value.trim();
+  const p = document.getElementById("civPass").value;
 
-  if(users[u] && users[u].password===p && users[u].type==='Civilian'){
-    sessionStorage.setItem('currentUser',JSON.stringify({username:u,type:'Civilian'}));
-    window.location.href = 'dashboard.html';
-  } else { err.innerText='Invalid credentials'; }
+  const users = await getUsers();
+
+  if(!users[u]){
+    showError("User not found");
+    return;
+  }
+
+  const user = users[u];
+
+  if(user.type !== "Civilian"){
+    showError("Not a Civilian account");
+    return;
+  }
+
+  if(user.password !== p){
+    showError("Wrong password");
+    return;
+  }
+
+  // ✅ SAVE LOGIN
+  localStorage.setItem("currentUser", JSON.stringify({
+    username: u,
+    type: "Civilian"
+  }));
+
+  // ✅ REDIRECT
+  window.location.href = "dashboard.html";
 }
 
-// Registration
-async function showRegMET(){ register('MET'); }
-async function showRegCivil(){ register('Civilian'); }
-
-async function register(type){
-  const u = prompt("Username:");
-  const p = prompt("Password:");
-  let c='';
-  if(type==='MET'){ c = prompt("Collar Number:"); if(!c){ alert('Collar required'); return; } }
-  const users = await getDataFromKV('users');
-  if(!u||!p){ alert('All fields required'); return; }
-  if(users[u]){ alert('Username exists'); return; }
-  users[u] = { password:p, type:type, collar:c, reports:[], vehicles:[], people:[], OCs:[] };
-  await saveDataToKV('users', users);
-  alert(type+' account created! Login now.');
+function showError(msg){
+  document.getElementById("error").innerText = msg;
 }
 </script>
+
 </body>
 </html>
