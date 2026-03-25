@@ -2,229 +2,323 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Lambeth PNC</title>
+<title>Lambeth PNC Dashboard</title>
 <style>
-body {font-family:Arial,sans-serif;background:#121212;color:#eee;margin:0;padding:0;}
-header {background:#0b3d91;color:white;padding:15px;text-align:center;font-size:24px;font-weight:bold;border-bottom:2px solid #0055a5;}
+body {
+  font-family: Arial, sans-serif;
+  background:#121212;
+  color:#eee;
+  margin:0;
+  padding:0;
+}
+header {
+  background:#0b3d91;
+  color:white;
+  padding:15px;
+  text-align:center;
+  font-size:24px;
+  font-weight:bold;
+  border-bottom:2px solid #0055a5;
+}
+nav {
+  display:flex;
+  justify-content:center;
+  background:#0a2c70;
+  padding:10px;
+  gap:10px;
+}
+nav button {
+  background:#1a4dab;
+  color:white;
+  border:none;
+  padding:8px 15px;
+  border-radius:4px;
+  cursor:pointer;
+  font-weight:bold;
+}
+nav button:hover { background:#3a6fc0; }
+
 main { padding:20px; max-width:1000px; margin:auto; }
 .section { display:none; }
-input, textarea, select { padding:5px;margin-top:5px;width:90%;border-radius:3px;border:none;background:#2b2b2b;color:#eee; }
-button {background:#0b3d91;color:white;border:none;padding:5px 10px;margin-top:5px;border-radius:3px;cursor:pointer;}
-button:hover { background:#3a6fc0; }
-#error {color:red;margin-top:5px;}
-#logoutBtn { position:fixed; bottom:20px; right:20px; background:#f44336; padding:10px 15px; border:none; color:white; border-radius:4px; cursor:pointer; font-weight:bold; }
-.panel { background:#1e1e1e;padding:10px;border-radius:4px;margin-bottom:15px; }
+h2 { 
+  background:#0b3d91;
+  padding:10px;
+  border-radius:4px;
+  margin-top:0;
+}
+.panel { 
+  background:#1e1e1e; 
+  padding:10px; 
+  border-radius:4px; 
+  margin-bottom:15px;
+  box-shadow:0 2px 4px rgba(0,0,0,0.5);
+}
+table { width:100%; border-collapse:collapse; margin-bottom:10px; }
+th, td { padding:8px; text-align:left; border-bottom:1px solid #333; }
+th { background:#0b3d91; }
+input, select, textarea {
+  padding:5px;
+  margin-right:5px;
+  margin-top:5px;
+  border-radius:3px;
+  border:none;
+  background:#2b2b2b;
+  color:#eee;
+}
+button.addBtn { 
+  background:#0b3d91; 
+  color:white; 
+  border:none; 
+  padding:5px 10px; 
+  cursor:pointer; 
+  border-radius:3px; 
+  margin-top:5px;
+}
+button.addBtn:hover { background:#3a6fc0; }
+button.editBtn, button.deleteBtn { 
+  padding:3px 6px; 
+  margin-right:3px; 
+  cursor:pointer; 
+  border-radius:3px; 
+  border:none;
+}
+button.editBtn { background:#4caf50; color:white; }
+button.deleteBtn { background:#f44336; color:white; }
+.error { color:red; margin-top:5px; }
 </style>
 </head>
 <body>
 
-<header>Lambeth PNC</header>
+<header>Lambeth PNC Dashboard</header>
 
-<!-- LOGIN SCREENS -->
-<main id="loginMETPage">
-<h2>MET Login</h2>
-<input id="metUsername" placeholder="Username"><br><br>
-<input id="metPassword" placeholder="Password" type="password"><br><br>
-<input id="metCollar" placeholder="Collar Number"><br><br>
-<button onclick="loginMET()">Login</button>
-<button onclick="showCivilianLogin()">Switch to Civilian Login</button>
-<p id="metLoginError"></p>
+<main id="loginPage">
+  <h2>Login</h2>
+  <input type="text" id="loginUsername" placeholder="Username"><br><br>
+  <input type="password" id="loginPassword" placeholder="Password"><br><br>
+  <select id="loginRole">
+    <option value="MET">MET</option>
+    <option value="Civilian">Civilian</option>
+  </select><br><br>
+  <input type="text" id="loginCollar" placeholder="Collar Number (MET only)"><br><br>
+  <button onclick="login()">Login</button>
+  <button onclick="showRegister()">Register</button>
+  <p class="error" id="loginError"></p>
 </main>
 
-<main id="loginCivilPage" class="section">
-<h2>Civilian Login</h2>
-<input id="civilUsername" placeholder="Username"><br><br>
-<input id="civilPassword" placeholder="Password" type="password"><br><br>
-<button onclick="loginCivil()">Login</button>
-<button onclick="showMETLogin()">Switch to MET Login</button>
-<p id="civilLoginError"></p>
+<main id="registerPage" class="section">
+  <h2>Register</h2>
+  <input type="text" id="regUsername" placeholder="Username"><br><br>
+  <input type="password" id="regPassword" placeholder="Password"><br><br>
+  <select id="regRole">
+    <option value="MET">MET</option>
+    <option value="Civilian">Civilian</option>
+  </select><br><br>
+  <input type="text" id="regCollar" placeholder="Collar Number (MET only)"><br><br>
+  <button onclick="register()">Create Account</button>
+  <button onclick="showLogin()">Back to Login</button>
+  <p class="error" id="regError"></p>
 </main>
 
-<!-- REGISTRATION SCREENS -->
-<main id="registerMETPage" class="section">
-<h2>MET Registration</h2>
-<input id="regMETUsername" placeholder="Username"><br><br>
-<input id="regMETPassword" placeholder="Password" type="password"><br><br>
-<input id="regMETCollar" placeholder="Collar Number"><br><br>
-<button onclick="registerMET()">Register MET</button>
-<button onclick="showMETLogin()">Back to Login</button>
-<p id="regMETError"></p>
-</main>
+<main id="dashboardPage" class="section">
+  <nav>
+    <button onclick="showSection('reports')">Reports</button>
+    <button onclick="showSection('vehicles')">Vehicles</button>
+    <button onclick="showSection('people')">People</button>
+    <button onclick="showSection('ocForm')">OC Form</button>
+    <button onclick="showSection('callForm')">Make Call</button>
+    <button onclick="showSection('callDashboard')">Calls Dashboard</button>
+    <button onclick="logout()">Logout</button>
+  </nav>
 
-<main id="registerCivilPage" class="section">
-<h2>Civilian Registration</h2>
-<input id="regCivilUsername" placeholder="Username"><br><br>
-<input id="regCivilPassword" placeholder="Password" type="password"><br><br>
-<button onclick="registerCivil()">Register Civilian</button>
-<button onclick="showCivilianLogin()">Back to Login</button>
-<p id="regCivilError"></p>
-</main>
+  <!-- Reports -->
+  <section id="reports" class="section panel">
+    <h2>Reports</h2>
+    <table id="reportsTable">
+      <tr><th>ID</th><th>Description</th><th>Actions</th></tr>
+    </table>
+    <input type="text" id="reportInput" placeholder="Report description">
+    <button class="addBtn" onclick="addReport()">Add Report</button>
+  </section>
 
-<!-- DASHBOARD VIEW -->
-<main id="dashboardView" class="section">
-<h2>OC Records (View Only)</h2>
-<label>Select OC: <select id="ocSelectView" onchange="loadOCDataView()"></select></label><br><br>
-<div id="ocInfoView" class="panel"></div>
-<button onclick="showCreateOCForm()">Create OC</button>
-<button onclick="showCallForm()">Make Call</button>
-</main>
+  <!-- Vehicles -->
+  <section id="vehicles" class="section panel">
+    <h2>Vehicles</h2>
+    <table id="vehiclesTable">
+      <tr><th>ID</th><th>Colour</th><th>Plate</th><th>Brand</th><th>Actions</th></tr>
+    </table>
+    <div class="form-group">
+      <input type="text" id="vehicleColour" placeholder="Colour">
+      <input type="text" id="vehiclePlate" placeholder="Plate">
+      <input type="text" id="vehicleBrand" placeholder="Brand">
+      <button class="addBtn" onclick="addVehicle()">Add Vehicle</button>
+    </div>
+  </section>
 
-<!-- DASHBOARD EDIT (MET) -->
-<main id="dashboardEdit" class="section">
-<h2>OC Records (Edit)</h2>
-<label>Select OC: <select id="ocSelectEdit" onchange="loadOCDataEdit()"></select></label><br><br>
-<div id="ocInfoEdit" class="panel"></div>
-<button onclick="showCallsDashboard()">View Calls</button>
-</main>
+  <!-- People -->
+  <section id="people" class="section panel">
+    <h2>People</h2>
+    <table id="peopleTable">
+      <tr><th>ID</th><th>Name</th><th>Actions</th></tr>
+    </table>
+    <input type="text" id="peopleInput" placeholder="Person name">
+    <button class="addBtn" onclick="addPerson()">Add Person</button>
+  </section>
 
-<!-- CREATE OC FORM (CIV ONLY) -->
-<main id="createOCFormPage" class="section">
-<h2>Create OC</h2>
-<label>RP Name:<br><input id="newOCName"></label><br><br>
-<label>RP Birthday:<br><input type="date" id="newOCBirthday"></label><br><br>
-<label>RP Address:<br><input id="newOCAddress"></label><br><br>
-<label>Gender:<br><input id="newOCGender"></label><br><br>
-<label>Ethnicity:<br><input id="newOCEthnicity"></label><br><br>
-<label>Distinguishing Marks:<br><input id="newOCDistMarks"></label><br><br>
-<button onclick="submitNewOC()">Create OC</button>
-<button onclick="cancelNewOC()">Cancel</button>
-<p id="newOCError"></p>
-</main>
+  <!-- OC Form -->
+  <section id="ocForm" class="section panel">
+    <h2>Create OC</h2>
+    <input type="text" id="ocName" placeholder="RP Name"><br>
+    <input type="date" id="ocBirthday"><br>
+    <input type="text" id="ocAddress" placeholder="RP Address"><br>
+    <input type="text" id="ocGender" placeholder="Gender"><br>
+    <input type="text" id="ocEthnicity" placeholder="Ethnicity"><br>
+    <input type="text" id="ocMarks" placeholder="Distinguishing Marks"><br>
+    <button class="addBtn" onclick="createOC()">Create OC</button>
+    <p class="error" id="ocError"></p>
+  </section>
 
-<!-- CALL FORM (CIV) -->
-<main id="civCallPage" class="section">
-<h2>Submit a Call</h2>
-<label>Caller Name:<br><input id="callName"></label><br><br>
-<label>Incident Type:<br><input id="callType"></label><br><br>
-<label>Location:<br><input id="callLocation"></label><br><br>
-<label>Description:<br><textarea id="callDesc"></textarea></label><br><br>
-<button onclick="submitCall()">Submit Call</button>
-<button onclick="cancelCallForm()">Cancel</button>
-<p id="callError"></p>
-</main>
+  <!-- Call Form -->
+  <section id="callForm" class="section panel">
+    <h2>Submit a Call</h2>
+    <input type="text" id="callName" placeholder="Caller Name"><br>
+    <input type="text" id="callType" placeholder="Incident Type"><br>
+    <input type="text" id="callLocation" placeholder="Location"><br>
+    <textarea id="callDesc" placeholder="Description"></textarea><br>
+    <button class="addBtn" onclick="submitCall()">Submit Call</button>
+    <p class="error" id="callError"></p>
+  </section>
 
-<!-- MET CALL DASHBOARD -->
-<main id="metCallDashboard" class="section">
-<h2>Incoming Calls</h2>
-<div id="callsList" class="panel"></div>
-</main>
+  <!-- Call Dashboard (MET only) -->
+  <section id="callDashboard" class="section panel">
+    <h2>Incoming Calls</h2>
+    <div id="callsList"></div>
+  </section>
 
-<button id="logoutBtn" onclick="logout()">Logout</button>
+</main>
 
 <script>
-// ===== STORAGE =====
-let currentUser = JSON.parse(localStorage.getItem('currentUser')) || null;
-function getUsers(){ return JSON.parse(localStorage.getItem('users'))||{} }
-function saveUsers(u){ localStorage.setItem('users', JSON.stringify(u)) }
-function hideAll(){ ['loginMETPage','loginCivilPage','registerMETPage','registerCivilPage','dashboardView','dashboardEdit','createOCFormPage','civCallPage','metCallDashboard'].forEach(id=>document.getElementById(id).style.display='none'); }
-function clearErrors(){ ['metLoginError','civilLoginError','regMETError','regCivilError','newOCError','callError'].forEach(id=>document.getElementById(id).innerText=''); }
+// ===== Login/Register =====
+function getUsers(){return JSON.parse(localStorage.getItem('users'))||{}}
+function saveUsers(users){localStorage.setItem('users',JSON.stringify(users))}
+let currentUser = JSON.parse(localStorage.getItem('currentUser'))||null;
 
-// ===== PAGE SWITCH =====
-function showMETLogin(){ hideAll(); document.getElementById('loginMETPage').style.display='block'; clearErrors(); }
-function showCivilianLogin(){ hideAll(); document.getElementById('loginCivilPage').style.display='block'; clearErrors(); }
-function showMETRegister(){ hideAll(); document.getElementById('registerMETPage').style.display='block'; clearErrors(); }
-function showCivilianRegister(){ hideAll(); document.getElementById('registerCivilPage').style.display='block'; clearErrors(); }
+function showLogin(){document.getElementById('loginPage').classList.remove('section');document.getElementById('registerPage').classList.add('section')}
+function showRegister(){document.getElementById('loginPage').classList.add('section');document.getElementById('registerPage').classList.remove('section')}
 
-// ===== REGISTER =====
-function registerMET(){
-  const u=document.getElementById('regMETUsername').value.trim();
-  const p=document.getElementById('regMETPassword').value;
-  const c=document.getElementById('regMETCollar').value.trim();
+function register(){
+  const u=document.getElementById('regUsername').value.trim();
+  const p=document.getElementById('regPassword').value;
+  const role=document.getElementById('regRole').value;
+  const c=document.getElementById('regCollar').value.trim();
   const users=getUsers();
-  if(!u||!p||!c){document.getElementById('regMETError').innerText='All fields required'; return;}
-  if(users[u]){document.getElementById('regMETError').innerText='Username exists'; return;}
-  users[u]={password:p,type:'MET',collar:c,OCs:[]};
+  if(!u||!p){document.getElementById('regError').innerText='Enter username & password';return;}
+  if(role==='MET' && !c){document.getElementById('regError').innerText='MET must have collar';return;}
+  if(users[u]){document.getElementById('regError').innerText='Username exists';return;}
+  users[u]={password:p,type:role};
+  if(role==='MET') users[u].collar=c;
+  users[u].reports=[]; users[u].vehicles=[]; users[u].people=[]; users[u].OCs=[]; users[u].calls=[];
   saveUsers(users);
-  document.getElementById('regMETError').innerText='Account created! Login now.';
+  document.getElementById('regError').innerText='Account created! Login now.';
 }
 
-function registerCivil(){
-  const u=document.getElementById('regCivilUsername').value.trim();
-  const p=document.getElementById('regCivilPassword').value;
+function login(){
+  const u=document.getElementById('loginUsername').value.trim();
+  const p=document.getElementById('loginPassword').value;
+  const role=document.getElementById('loginRole').value;
+  const c=document.getElementById('loginCollar').value.trim();
   const users=getUsers();
-  if(!u||!p){document.getElementById('regCivilError').innerText='All fields required'; return;}
-  if(users[u]){document.getElementById('regCivilError').innerText='Username exists'; return;}
-  users[u]={password:p,type:'Civilian',OCs:[]};
-  saveUsers(users);
-  document.getElementById('regCivilError').innerText='Account created! Login now.';
+  if(users[u]&&users[u].password===p&&users[u].type===role){
+    if(role==='MET' && users[u].collar!==c){document.getElementById('loginError').innerText='Invalid collar number';return;}
+    currentUser={username:u,type:role}; localStorage.setItem('currentUser',JSON.stringify(currentUser));
+    openDashboard();
+    document.getElementById('loginError').innerText='';
+  }else{document.getElementById('loginError').innerText='Invalid credentials';}
 }
 
-// ===== LOGIN =====
-function loginMET(){
-  const u=document.getElementById('metUsername').value.trim();
-  const p=document.getElementById('metPassword').value;
-  const c=document.getElementById('metCollar').value.trim();
-  const users=getUsers();
-  if(!users[u] || users[u].password!==p || users[u].type!=='MET'){ document.getElementById('metLoginError').innerText='Invalid username/password'; return; }
-  if(users[u].collar!==c){ document.getElementById('metLoginError').innerText='Invalid collar number'; return; }
-  currentUser={username:u,type:'MET'}; localStorage.setItem('currentUser',JSON.stringify(currentUser));
-  openDashboard();
-}
-
-function loginCivil(){
-  const u=document.getElementById('civilUsername').value.trim();
-  const p=document.getElementById('civilPassword').value;
-  const users=getUsers();
-  if(!users[u] || users[u].password!==p || users[u].type!=='Civilian'){ document.getElementById('civilLoginError').innerText='Invalid username/password'; return; }
-  currentUser={username:u,type:'Civilian'}; localStorage.setItem('currentUser',JSON.stringify(currentUser));
-  openDashboard();
-}
-
-// ===== DASHBOARD =====
+// ===== Dashboard =====
 function openDashboard(){
-  if(!currentUser){ showMETLogin(); return; }
-  hideAll();
-  document.getElementById('dashboardView').style.display='block';
-  if(currentUser.type==='MET'){ document.getElementById('dashboardEdit').style.display='block'; }
-  if(currentUser.type==='Civilian'){ document.getElementById('createOCFormPage').style.display='none'; }
+  document.getElementById('loginPage').classList.add('section');
+  document.getElementById('registerPage').classList.add('section');
+  document.getElementById('dashboardPage').classList.remove('section');
+  loadAllTables();
+  if(currentUser.type==='Civilian'){
+    document.getElementById('ocForm').style.display='block';
+    document.getElementById('callForm').style.display='block';
+    document.getElementById('callDashboard').style.display='none';
+  }else{
+    document.getElementById('ocForm').style.display='none';
+    document.getElementById('callForm').style.display='none';
+    document.getElementById('callDashboard').style.display='block';
+    loadCalls();
+  }
 }
 
-// ===== LOGOUT =====
-function logout(){ currentUser=null; localStorage.removeItem('currentUser'); hideAll(); showMETLogin(); }
+function logout(){currentUser=null; localStorage.removeItem('currentUser');showLogin();}
+function showSection(name){document.querySelectorAll('.section.panel').forEach(s=>s.style.display='none');document.getElementById(name).style.display='block';}
 
-// ===== CREATE OC (CIV) =====
-function showCreateOCForm(){ hideAll(); document.getElementById('createOCFormPage').style.display='block'; }
-function cancelNewOC(){ document.getElementById('createOCFormPage').style.display='none'; openDashboard(); }
-function submitNewOC(){
-  const name=document.getElementById('newOCName').value.trim();
-  const dob=document.getElementById('newOCBirthday').value.trim();
-  const addr=document.getElementById('newOCAddress').value.trim();
-  if(!name||!dob||!addr){document.getElementById('newOCError').innerText='Name, Birthday & Address required'; return;}
-  let OCs=JSON.parse(localStorage.getItem('OCs')||'{}');
-  if(OCs[name]){document.getElementById('newOCError').innerText='OC exists'; return;}
-  OCs[name]={personal:{name,dob,address:addr},convictions:{},vehicles:[],reports:[]};
-  localStorage.setItem('OCs',JSON.stringify(OCs));
-  alert('OC Created!'); cancelNewOC(); loadOCList();
+// ====== Data Helpers ======
+function getData(type){const users=getUsers();return currentUser&&users[currentUser.username]?users[currentUser.username][type]:[];}
+function saveData(type,data){const users=getUsers();if(currentUser){users[currentUser.username][type]=data;saveUsers(users);}}
+
+// ===== Reports/Vehicles/People (existing) =====
+function loadReports(){const r=getData('reports');const t=document.getElementById('reportsTable');t.innerHTML='<tr><th>ID</th><th>Description</th><th>Actions</th></tr>';r.forEach((v,i)=>{const row=t.insertRow();row.insertCell(0).innerText=i+1;row.insertCell(1).innerText=v;row.insertCell(2).innerHTML=`<button class="editBtn" onclick="editReport(${i})">Edit</button> <button class="deleteBtn" onclick="deleteReport(${i})">Delete</button>`;});}
+function loadVehicles(){const r=getData('vehicles');const t=document.getElementById('vehiclesTable');t.innerHTML='<tr><th>ID</th><th>Colour</th><th>Plate</th><th>Brand</th><th>Actions</th></tr>';r.forEach((v,i)=>{const row=t.insertRow();row.insertCell(0).innerText=i+1;row.insertCell(1).innerText=v.colour;row.insertCell(2).innerText=v.plate;row.insertCell(3).innerText=v.brand;row.insertCell(4).innerHTML=`<button class="editBtn" onclick="editVehicle(${i})">Edit</button> <button class="deleteBtn" onclick="deleteVehicle(${i})">Delete</button>`;});}
+function loadPeople(){const r=getData('people');const t=document.getElementById('peopleTable');t.innerHTML='<tr><th>ID</th><th>Name</th><th>Actions</th></tr>';r.forEach((v,i)=>{const row=t.insertRow();row.insertCell(0).innerText=i+1;row.insertCell(1).innerText=v;row.insertCell(2).innerHTML=`<button class="editBtn" onclick="editPerson(${i})">Edit</button> <button class="deleteBtn" onclick="deletePerson(${i})">Delete</button>`;});}
+function loadAllTables(){loadReports();loadVehicles();loadPeople();}
+
+// ===== Reports/Vehicles/People Add/Edit/Delete ======
+function addReport(){const v=document.getElementById('reportInput').value;if(!v)return;const d=getData('reports');d.push(v);saveData('reports',d);document.getElementById('reportInput').value='';loadReports();}
+function editReport(i){const d=getData('reports');const v=prompt("Edit report:",d[i]);if(v!==null){d[i]=v;saveData('reports',d);loadReports();}}
+function deleteReport(i){const d=getData('reports');if(confirm("Delete this report?")){d.splice(i,1);saveData('reports',d);loadReports();}}
+
+function addVehicle(){const c=document.getElementById('vehicleColour').value.trim(),p=document.getElementById('vehiclePlate').value.trim(),b=document.getElementById('vehicleBrand').value.trim();if(!c||!p||!b)return;const d=getData('vehicles');d.push({colour:c,plate:p,brand:b});saveData('vehicles',d);document.getElementById('vehicleColour').value='';document.getElementById('vehiclePlate').value='';document.getElementById('vehicleBrand').value='';loadVehicles();}
+function editVehicle(i){const d=getData('vehicles');const v=d[i];const c=prompt("Colour:",v.colour),p=prompt("Plate:",v.plate),b=prompt("Brand:",v.brand);if(c!==null&&p!==null&&b!==null){d[i]={colour:c,plate:p,brand:b};saveData('vehicles',d);loadVehicles();}}
+function deleteVehicle(i){const d=getData('vehicles');if(confirm("Delete this vehicle?")){d.splice(i,1);saveData('vehicles',d);loadVehicles();}}
+
+function addPerson(){const v=document.getElementById('peopleInput').value.trim();if(!v)return;const d=getData('people');d.push(v);saveData('people',d);document.getElementById('peopleInput').value='';loadPeople();}
+function editPerson(i){const d=getData('people');const v=prompt("Edit name:",d[i]);if(v!==null){d[i]=v;saveData('people',d);loadPeople();}}
+function deletePerson(i){const d=getData('people');if(confirm("Delete this person?")){d.splice(i,1);saveData('people',d);loadPeople();}}
+
+// ===== OC Form =====
+function createOC(){
+  const name=document.getElementById('ocName').value.trim();
+  const dob=document.getElementById('ocBirthday').value;
+  const addr=document.getElementById('ocAddress').value.trim();
+  if(!name||!dob||!addr){document.getElementById('ocError').innerText='Name, DOB & Address required';return;}
+  const users=getUsers();
+  const user=users[currentUser.username];
+  user.OCs.push({name,dob,address:addr,gender:document.getElementById('ocGender').value,ethnicity:document.getElementById('ocEthnicity').value,marks:document.getElementById('ocMarks').value});
+  saveUsers(users);
+  alert('OC Created!');
+  document.getElementById('ocName').value='';document.getElementById('ocBirthday').value='';document.getElementById('ocAddress').value='';document.getElementById('ocGender').value='';document.getElementById('ocEthnicity').value='';document.getElementById('ocMarks').value='';
 }
 
-// ===== CALL FORM =====
-function showCallForm(){ hideAll(); document.getElementById('civCallPage').style.display='block'; }
-function cancelCallForm(){ document.getElementById('civCallPage').style.display='none'; openDashboard(); }
+// ===== Call Form =====
 function submitCall(){
   const name=document.getElementById('callName').value.trim();
   const type=document.getElementById('callType').value.trim();
   const loc=document.getElementById('callLocation').value.trim();
   const desc=document.getElementById('callDesc').value.trim();
-  if(!name||!type||!loc){document.getElementById('callError').innerText='All fields required'; return;}
-  let calls=JSON.parse(localStorage.getItem('calls')||'[]');
-  calls.push({caller:name,type:type,location:loc,description:desc,status:'Pending',timestamp:new Date().toLocaleString()});
-  localStorage.setItem('calls',JSON.stringify(calls));
-  alert('Call submitted!'); cancelCallForm();
+  if(!name||!type||!loc){document.getElementById('callError').innerText='Name, Type & Location required';return;}
+  const users=getUsers();
+  const user=users[currentUser.username];
+  user.calls.push({caller:name,type:type,location:loc,description:desc,status:'Pending',timestamp:new Date().toLocaleString()});
+  saveUsers(users);
+  alert('Call submitted!');
+  document.getElementById('callName').value='';document.getElementById('callType').value='';document.getElementById('callLocation').value='';document.getElementById('callDesc').value='';
 }
 
-// ===== OC LIST LOAD =====
-function loadOCList(){
-  let OCs=JSON.parse(localStorage.getItem('OCs')||'{}');
-  let selView=document.getElementById('ocSelectView');
-  let selEdit=document.getElementById('ocSelectEdit');
-  if(selView) selView.innerHTML=''; if(selEdit) selEdit.innerHTML='';
-  Object.keys(OCs).forEach(name=>{
-    if(selView){let opt=document.createElement('option'); opt.value=name; opt.innerText=name; selView.appendChild(opt);}
-    if(selEdit){let opt=document.createElement('option'); opt.value=name; opt.innerText=name; selEdit.appendChild(opt);}
-  });
+// ===== MET Call Dashboard =====
+function loadCalls(){
+  const users=getUsers();
+  let calls=[];
+  for(let u in users){if(users[u].type==='Civilian'){calls=calls.concat(users[u].calls||[]);}}
+  const div=document.getElementById('callsList');div.innerHTML='';
+  calls.forEach((c,i)=>{const d=document.createElement('div');d.className='panel';d.innerHTML=`<b>${c.caller}</b> | ${c.type} | ${c.location} | ${c.timestamp}<br>${c.description}`;div.appendChild(d);});
 }
 
+// Auto-login
+if(currentUser) openDashboard();
 </script>
-
 </body>
 </html>
