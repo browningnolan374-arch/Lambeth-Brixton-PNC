@@ -1,127 +1,237 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
 <meta charset="UTF-8">
 <title>Lambeth PNC Login</title>
+
 <style>
-body { font-family: Arial, sans-serif; background:#121212; color:#eee; margin:0; padding:0; }
-header { background:#0b3d91; color:white; padding:15px; text-align:center; font-size:28px; font-weight:bold; }
-.container { max-width:400px; margin:30px auto; background:#1e1e1e; padding:20px; border-radius:6px; }
-input { width:100%; padding:8px; margin:5px 0; border-radius:3px; border:none; background:#2b2b2b; color:#eee; }
-button { width:100%; padding:10px; background:#0b3d91; border:none; color:white; font-weight:bold; border-radius:4px; cursor:pointer; margin-top:10px; }
-button:hover { background:#3a6fc0; }
-.error { color:red; text-align:center; margin-top:5px; }
-.success { color:green; text-align:center; margin-top:5px; }
-.tabs { display:flex; justify-content:center; margin-bottom:10px; }
-.tabs button { flex:1; padding:12px; background:#1a4dab; border:none; color:white; font-weight:bold; font-size:16px; cursor:pointer; }
-.tabs button.active { background:#3a6fc0; }
+body {
+  margin:0;
+  font-family:Arial;
+  background:#121212;
+  color:#eee;
+}
+
+header {
+  background:#0b3d91;
+  padding:15px;
+  text-align:center;
+  font-size:26px;
+  font-weight:bold;
+}
+
+.container {
+  max-width:400px;
+  margin:40px auto;
+  background:#1e1e1e;
+  padding:20px;
+  border-radius:6px;
+}
+
+h2 { text-align:center; }
+
+input {
+  width:100%;
+  padding:10px;
+  margin:8px 0;
+  border:none;
+  border-radius:4px;
+  background:#2b2b2b;
+  color:white;
+}
+
+button {
+  width:100%;
+  padding:10px;
+  margin-top:10px;
+  background:#0b3d91;
+  color:white;
+  border:none;
+  border-radius:4px;
+  cursor:pointer;
+}
+
+.tabs {
+  display:flex;
+  margin-bottom:15px;
+}
+
+.tabs button {
+  flex:1;
+  background:#1a4dab;
+}
+
+.tabs button.active {
+  background:#3a6fc0;
+}
+
+.error { color:red; text-align:center; }
+.success { color:green; text-align:center; }
 </style>
 </head>
+
 <body>
 
-<header>Lambeth PNC Login</header>
-
-<div class="tabs">
-  <button id="tabMET" class="active" onclick="showLoginForm('MET')">MET Login</button>
-  <button id="tabCivil" onclick="showLoginForm('Civilian')">Civilian Login</button>
-</div>
-
-<div class="container" id="loginMETForm">
-  <input type="text" id="loginMETUsername" placeholder="Username">
-  <input type="password" id="loginMETPassword" placeholder="Password">
-  <input type="text" id="loginCollar" placeholder="Collar Number">
-  <button onclick="loginMET()">Login</button>
-  <p class="error" id="loginMETError"></p>
-</div>
-
-<div class="container" id="loginCivilForm" style="display:none;">
-  <input type="text" id="loginCivilUsername" placeholder="Username">
-  <input type="password" id="loginCivilPassword" placeholder="Password">
-  <button onclick="loginCivil()">Login</button>
-  <p class="error" id="loginCivilError"></p>
-</div>
+<header>Lambeth PNC</header>
 
 <div class="container">
-  <h3>Register</h3>
-  <div id="regMET">
-    <input type="text" id="regMETUsername" placeholder="MET Username">
-    <input type="password" id="regMETPassword" placeholder="Password">
-    <input type="text" id="regMETCollar" placeholder="Collar Number">
-    <button onclick="registerMET()">Create MET Account</button>
-  </div>
-  <div id="regCivil" style="margin-top:10px;">
-    <input type="text" id="regCivilUsername" placeholder="Civilian Username">
-    <input type="password" id="regCivilPassword" placeholder="Password">
-    <button onclick="registerCivil()">Create Civilian Account</button>
-  </div>
-  <p class="error" id="regError"></p>
-  <p class="success" id="regSuccess"></p>
+
+<div class="tabs">
+  <button id="loginTab" class="active" onclick="showLogin()">Login</button>
+  <button id="registerTab" onclick="showRegister()">Register</button>
+</div>
+
+<!-- LOGIN -->
+<div id="loginBox">
+  <h2>Login</h2>
+
+  <input id="loginUser" placeholder="Username">
+  <input id="loginPass" type="password" placeholder="Password">
+  <input id="loginCollar" placeholder="Collar Number (MET only)">
+
+  <button onclick="login()">Login</button>
+  <p id="loginError" class="error"></p>
+</div>
+
+<!-- REGISTER -->
+<div id="registerBox" style="display:none;">
+  <h2>Register</h2>
+
+  <select id="regType">
+    <option value="Civilian">Civilian</option>
+    <option value="MET">MET</option>
+  </select>
+
+  <input id="regUser" placeholder="Username">
+  <input id="regPass" type="password" placeholder="Password">
+  <input id="regCollar" placeholder="Collar Number (MET only)">
+
+  <button onclick="register()">Create Account</button>
+  <p id="regMsg" class="error"></p>
+</div>
+
 </div>
 
 <script>
-function getUsers(){ return JSON.parse(localStorage.getItem('users'))||{}; }
-function saveUsers(users){ localStorage.setItem('users', JSON.stringify(users)); }
+const API = "/api/storage";
 
-let currentTab='MET';
-function showLoginForm(tab){
-  currentTab=tab;
-  document.getElementById('loginMETForm').style.display = (tab==='MET')?'block':'none';
-  document.getElementById('loginCivilForm').style.display = (tab==='Civilian')?'block':'none';
-  document.getElementById('tabMET').classList.toggle('active', tab==='MET');
-  document.getElementById('tabCivil').classList.toggle('active', tab==='Civilian');
+//////////////////////////////////////////////////
+// STORAGE
+//////////////////////////////////////////////////
+
+async function getUsers(){
+  const res = await fetch(API + "?key=users");
+  const data = await res.json();
+  return data.value || {};
 }
 
-// ===== LOGIN =====
-function loginMET(){
-  const u=document.getElementById('loginMETUsername').value.trim();
-  const p=document.getElementById('loginMETPassword').value;
-  const c=document.getElementById('loginCollar').value.trim();
-  const users=getUsers();
-  const err=document.getElementById('loginMETError'); err.innerText='';
-  if(!users[u]){ err.innerText='Username does not exist'; return; }
-  const user=users[u];
-  if(user.type!=='MET'){ err.innerText='Not a MET account'; return; }
-  if(user.password!==p){ err.innerText='Incorrect password'; return; }
-  if(user.collar!==c){ err.innerText='Invalid collar number'; return; }
-  localStorage.setItem('currentUser', JSON.stringify({username:u,type:'MET'}));
-  window.location.href='dashboard.html';
+async function saveUsers(users){
+  await fetch(API,{
+    method:"POST",
+    headers:{"Content-Type":"application/json"},
+    body:JSON.stringify({key:"users", value:users})
+  });
 }
 
-function loginCivil(){
-  const u=document.getElementById('loginCivilUsername').value.trim();
-  const p=document.getElementById('loginCivilPassword').value;
-  const users=getUsers();
-  const err=document.getElementById('loginCivilError'); err.innerText='';
-  if(!users[u]){ err.innerText='Username does not exist'; return; }
-  const user=users[u];
-  if(user.type!=='Civilian'){ err.innerText='Not a Civilian account'; return; }
-  if(user.password!==p){ err.innerText='Incorrect password'; return; }
-  localStorage.setItem('currentUser', JSON.stringify({username:u,type:'Civilian'}));
-  window.location.href='dashboard.html';
+//////////////////////////////////////////////////
+// TABS
+//////////////////////////////////////////////////
+
+function showLogin(){
+  loginBox.style.display = "block";
+  registerBox.style.display = "none";
+  loginTab.classList.add("active");
+  registerTab.classList.remove("active");
 }
 
-// ===== REGISTER =====
-function registerMET(){
-  const u=document.getElementById('regMETUsername').value.trim();
-  const p=document.getElementById('regMETPassword').value;
-  const c=document.getElementById('regMETCollar').value.trim();
-  const users=getUsers();
-  const err=document.getElementById('regError'); const success=document.getElementById('regSuccess'); err.innerText=''; success.innerText='';
-  if(!u||!p||!c){ err.innerText='All fields required'; return; }
-  if(users[u]){ err.innerText='Username exists'; return; }
-  users[u]={password:p,type:'MET',collar:c,reports:[],vehicles:[],people:[],OCs:[],calls:[]};
-  saveUsers(users); success.innerText='MET account created! Login now.';
+function showRegister(){
+  loginBox.style.display = "none";
+  registerBox.style.display = "block";
+  registerTab.classList.add("active");
+  loginTab.classList.remove("active");
 }
 
-function registerCivil(){
-  const u=document.getElementById('regCivilUsername').value.trim();
-  const p=document.getElementById('regCivilPassword').value;
-  const users=getUsers();
-  const err=document.getElementById('regError'); const success=document.getElementById('regSuccess'); err.innerText=''; success.innerText='';
-  if(!u||!p){ err.innerText='All fields required'; return; }
-  if(users[u]){ err.innerText='Username exists'; return; }
-  users[u]={password:p,type:'Civilian',reports:[],vehicles:[],people:[],OCs:[],calls:[]};
-  saveUsers(users); success.innerText='Civilian account created! Login now.';
+//////////////////////////////////////////////////
+// REGISTER
+//////////////////////////////////////////////////
+
+async function register(){
+  const users = await getUsers();
+
+  const u = regUser.value.trim();
+  const p = regPass.value;
+  const type = regType.value;
+  const collar = regCollar.value.trim();
+
+  if(!u || !p){
+    regMsg.innerText = "Fill all fields";
+    return;
+  }
+
+  if(users[u]){
+    regMsg.innerText = "Username already exists";
+    return;
+  }
+
+  if(type === "MET" && !collar){
+    regMsg.innerText = "Enter collar number";
+    return;
+  }
+
+  users[u] = {
+    password: p,
+    type: type,
+    collar: type === "MET" ? collar : ""
+  };
+
+  await saveUsers(users);
+
+  regMsg.innerText = "Account created ✅";
+}
+
+//////////////////////////////////////////////////
+// LOGIN
+//////////////////////////////////////////////////
+
+async function login(){
+  const users = await getUsers();
+
+  const u = loginUser.value.trim();
+  const p = loginPass.value;
+  const c = loginCollar.value.trim();
+
+  const err = document.getElementById("loginError");
+  err.innerText = "";
+
+  if(!users[u]){
+    err.innerText = "User not found";
+    return;
+  }
+
+  const user = users[u];
+
+  if(user.password !== p){
+    err.innerText = "Wrong password";
+    return;
+  }
+
+  if(user.type === "MET" && user.collar !== c){
+    err.innerText = "Invalid collar number";
+    return;
+  }
+
+  // SAVE SESSION
+  localStorage.setItem("currentUser", JSON.stringify({
+    username: u,
+    type: user.type
+  }));
+
+  // REDIRECT
+  if(user.type === "MET"){
+    window.location.href = "met.html";
+  } else {
+    window.location.href = "civil.html";
+  }
 }
 </script>
 
