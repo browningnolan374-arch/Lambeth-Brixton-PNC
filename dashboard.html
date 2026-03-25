@@ -36,6 +36,13 @@ nav button {
 /* SECTIONS */
 .section { display:none; padding:20px; }
 
+.panel {
+  background:#1e1e1e;
+  padding:15px;
+  margin-top:10px;
+  border-left:4px solid #0b3d91;
+}
+
 input {
   padding:8px;
   margin:5px;
@@ -58,10 +65,6 @@ button {
   margin-top:10px;
   border-left:4px solid #0b3d91;
 }
-
-/* CIV UI */
-.civilBox { padding:20px; }
-.civilTabs button { margin:5px; }
 </style>
 </head>
 
@@ -72,12 +75,13 @@ button {
 <!-- MET NAV -->
 <nav id="metNav">
 <button onclick="showSection('lookup')">Lookup</button>
-<button onclick="showSection('vehicles')">Vehicles</button>
+<button onclick="showSection('vehiclesMet')">Vehicles</button>
 <button onclick="showSection('warrants')">Warrants</button>
 <button onclick="logout()">Logout</button>
 </nav>
 
-<!-- MET SYSTEM -->
+<!-- ================= MET ================= -->
+
 <div id="lookup" class="section">
 <h2>Person Lookup</h2>
 <input id="searchName" placeholder="Name">
@@ -85,7 +89,7 @@ button {
 <div id="personResult"></div>
 </div>
 
-<div id="vehicles" class="section">
+<div id="vehiclesMet" class="section">
 <h2>Vehicle Lookup</h2>
 <input id="searchPlate" placeholder="Plate">
 <button onclick="searchVehicle()">Search</button>
@@ -101,34 +105,47 @@ button {
 <button onclick="createWarrant()">Create</button>
 </div>
 
-<!-- CIVILIAN UI -->
+<!-- ================= CIV ================= -->
+
 <div id="civilianUI" style="display:none;">
 
-<div class="civilBox">
+<nav>
+  <button onclick="showSection('personal')">Personal</button>
+  <button onclick="showSection('reports')">Reports</button>
+  <button onclick="showSection('vehicles')">Vehicles</button>
+  <button onclick="logout()">Logout</button>
+</nav>
 
-<div class="civilTabs">
-<button onclick="showCivilTab('list')">My OCs</button>
-<button onclick="showCivilTab('create')">Create OC</button>
-<button onclick="logout()">Logout</button>
+<div class="panel">
+  <select id="ocSelect" onchange="loadOCData()"></select>
+  <button onclick="createOC()">Add OC</button>
 </div>
 
-<!-- OC LIST -->
-<div id="listTab" class="civilSection">
-<select id="ocSelect"></select>
-<div id="civilContent"></div>
+<div id="personal" class="section">
+<h2>Personal Info</h2>
+<input id="piName" placeholder="Name"><br>
+<input id="piDOB" type="date"><br>
+<input id="piAddress" placeholder="Address"><br>
+<input id="piGender" placeholder="Gender"><br>
+<button onclick="savePersonalInfo()">Save</button>
 </div>
 
-<!-- OC CREATE -->
-<div id="createTab" class="civilSection" style="display:none;">
-<input id="ocName" placeholder="Name"><br>
-<input id="ocBirthday" type="date"><br>
-<input id="ocAddress" placeholder="Address"><br>
-<input id="ocGender" placeholder="Gender"><br>
-<input id="ocMarks" placeholder="Marks"><br>
-<button onclick="createOC()">Create</button>
+<div id="reports" class="section">
+<h2>Reports</h2>
+<div id="reportsTable"></div>
+<input id="reportInput" placeholder="Report">
+<button onclick="addReport()">Add</button>
 </div>
 
+<div id="vehicles" class="section">
+<h2>Vehicles</h2>
+<div id="vehiclesTable"></div>
+<input id="vehicleColour" placeholder="Colour">
+<input id="vehiclePlate" placeholder="Plate">
+<input id="vehicleBrand" placeholder="Brand">
+<button onclick="addVehicle()">Add</button>
 </div>
+
 </div>
 
 <script>
@@ -169,7 +186,7 @@ document.addEventListener("DOMContentLoaded", () => {
     metNav.style.display = "none";
     civilianUI.style.display = "block";
     loadCivil();
-    showCivilTab("list");
+    showSection("personal");
   }
 
 });
@@ -196,43 +213,38 @@ async function searchPerson(){
   let OCs = await getData("OCs");
   const name = searchName.value.toLowerCase();
 
-  const found = OCs.filter(o=>o.name.toLowerCase().includes(name));
+  const found = OCs.filter(o=>o.personal?.name?.toLowerCase().includes(name));
 
   personResult.innerHTML="";
-  if(found.length === 0){
-    personResult.innerHTML = "No results";
-    return;
-  }
 
   found.forEach(o=>{
     personResult.innerHTML+=`
     <div class="card">
-    <h3>${o.name}</h3>
-    <p>DOB: ${o.birthday}</p>
-    <p>Address: ${o.address}</p>
-    <p>Marks: ${o.marks}</p>
-    <button onclick="quickWarrant('${o.name}')">Add Warrant</button>
+    <h3>${o.personal.name}</h3>
+    <p>DOB: ${o.personal.dob}</p>
+    <p>Address: ${o.personal.address}</p>
+    <button onclick="quickWarrant('${o.personal.name}')">Add Warrant</button>
     </div>`;
   });
 }
 
 async function searchVehicle(){
-  let users = await getData("users");
+  let OCs = await getData("OCs");
+
   let found=null;
 
-  for(const u in users){
-    (users[u].vehicles||[]).forEach(v=>{
+  OCs.forEach(o=>{
+    (o.vehicles||[]).forEach(v=>{
       if(v.plate.toLowerCase() === searchPlate.value.toLowerCase()){
         found=v;
       }
     });
-  }
+  });
 
   vehicleResult.innerHTML = found ?
   `<div class="card">
     <h3>${found.plate}</h3>
     <p>Colour: ${found.colour}</p>
-    <p>Reason: ${found.reason}</p>
   </div>` :
   "Not found";
 }
@@ -268,9 +280,7 @@ async function loadWarrants(){
     warrantList.innerHTML+=`
     <div class="card">
     <h3>${x.name}</h3>
-    <p>Reason: ${x.reason}</p>
-    <p>Officer: ${x.officer}</p>
-    <p>Date: ${x.date}</p>
+    <p>${x.reason}</p>
     <button onclick="deleteWarrant(${i})">Delete</button>
     </div>`;
   });
@@ -292,79 +302,117 @@ function quickWarrant(name){
 // CIV SYSTEM
 //////////////////////////////////////////////////
 
-function showCivilTab(tab){
-  document.querySelectorAll(".civilSection").forEach(s=>s.style.display="none");
-
-  if(tab==="list") listTab.style.display="block";
-  if(tab==="create") createTab.style.display="block";
-}
+let currentOCIndex = 0;
 
 async function loadCivil(){
-  let OCs = await getData("OCs");
-  let mine = OCs.filter(o => o.createdBy === user.username);
+  const allOCs = await getData("OCs");
+  const mine = allOCs.filter(o => o.createdBy === user.username);
 
-  ocSelect.innerHTML="";
-
-  if(mine.length === 0){
-    civilContent.innerHTML="No OCs yet";
-    return;
-  }
+  ocSelect.innerHTML = "";
 
   mine.forEach((o,i)=>{
-    ocSelect.innerHTML+=`<option value="${i}">${o.name}</option>`;
+    ocSelect.innerHTML += `<option value="${i}">${o.personal?.name || "OC "+(i+1)}</option>`;
   });
 
-  ocSelect.onchange = () => showCivil(mine[ocSelect.value]);
-
-  showCivil(mine[0]);
-}
-
-function showCivil(o){
-  civilContent.innerHTML=`
-  <div class="card">
-    <h3>${o.name}</h3>
-    <p>DOB: ${o.birthday}</p>
-    <p>Address: ${o.address}</p>
-    <p>Gender: ${o.gender}</p>
-    <p>Marks: ${o.marks}</p>
-  </div>`;
+  currentOCIndex = 0;
+  loadOCData();
 }
 
 async function createOC(){
-  let OCs = await getData("OCs");
+  let allOCs = await getData("OCs");
 
-  const name = ocName.value.trim();
-  const birthday = ocBirthday.value;
-  const address = ocAddress.value.trim();
-  const gender = ocGender.value.trim();
-  const marks = ocMarks.value.trim();
-
-  if(!name || !birthday || !address){
-    alert("Name, DOB & Address required");
-    return;
-  }
-
-  OCs.push({
-    name,
-    birthday,
-    address,
-    gender: gender || "N/A",
-    marks: marks || "None",
-    createdBy: user.username
+  allOCs.push({
+    createdBy: user.username,
+    personal:{name:"",dob:"",address:"",gender:""},
+    reports:[],
+    vehicles:[]
   });
 
-  await saveData("OCs",OCs);
-
-  ocName.value="";
-  ocBirthday.value="";
-  ocAddress.value="";
-  ocGender.value="";
-  ocMarks.value="";
-
-  alert("OC Created");
-
+  await saveData("OCs", allOCs);
   loadCivil();
-  showCivilTab("list");
+}
+
+async function loadOCData(){
+  const allOCs = await getData("OCs");
+  const mine = allOCs.filter(o => o.createdBy === user.username);
+  const oc = mine[ocSelect.value];
+
+  if(!oc) return;
+
+  currentOCIndex = ocSelect.value;
+
+  piName.value = oc.personal.name || "";
+  piDOB.value = oc.personal.dob || "";
+  piAddress.value = oc.personal.address || "";
+  piGender.value = oc.personal.gender || "";
+
+  reportsTable.innerHTML = (oc.reports||[]).map((r,i)=>
+    `<div class="card">${r} <button onclick="deleteEntry('reports',${i})">X</button></div>`
+  ).join("");
+
+  vehiclesTable.innerHTML = (oc.vehicles||[]).map((v,i)=>
+    `<div class="card">${v.plate} (${v.colour}) <button onclick="deleteEntry('vehicles',${i})">X</button></div>`
+  ).join("");
+}
+
+async function savePersonalInfo(){
+  let allOCs = await getData("OCs");
+  let mine = allOCs.filter(o => o.createdBy === user.username);
+
+  let oc = mine[currentOCIndex];
+
+  oc.personal = {
+    name: piName.value,
+    dob: piDOB.value,
+    address: piAddress.value,
+    gender: piGender.value
+  };
+
+  await saveData("OCs", allOCs);
+  alert("Saved");
+  loadCivil();
+}
+
+async function addReport(){
+  let allOCs = await getData("OCs");
+  let mine = allOCs.filter(o => o.createdBy === user.username);
+  let oc = mine[currentOCIndex];
+
+  oc.reports.push(reportInput.value);
+  reportInput.value="";
+
+  await saveData("OCs", allOCs);
+  loadOCData();
+}
+
+async function addVehicle(){
+  let allOCs = await getData("OCs");
+  let mine = allOCs.filter(o => o.createdBy === user.username);
+  let oc = mine[currentOCIndex];
+
+  oc.vehicles.push({
+    colour: vehicleColour.value,
+    plate: vehiclePlate.value,
+    brand: vehicleBrand.value
+  });
+
+  vehicleColour.value="";
+  vehiclePlate.value="";
+  vehicleBrand.value="";
+
+  await saveData("OCs", allOCs);
+  loadOCData();
+}
+
+async function deleteEntry(type,i){
+  let allOCs = await getData("OCs");
+  let mine = allOCs.filter(o => o.createdBy === user.username);
+  let oc = mine[currentOCIndex];
+
+  oc[type].splice(i,1);
+
+  await saveData("OCs", allOCs);
+  loadOCData();
 }
 </script>
 
