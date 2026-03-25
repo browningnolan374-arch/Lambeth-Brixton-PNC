@@ -6,14 +6,7 @@
 
 <style>
 body { margin:0; font-family:Arial; background:#121212; color:#eee; }
-
-header {
-  background:#0b3d91;
-  padding:15px;
-  text-align:center;
-  font-size:24px;
-  font-weight:bold;
-}
+header { background:#0b3d91; padding:15px; text-align:center; font-size:24px; }
 
 nav {
   display:flex;
@@ -29,41 +22,16 @@ nav button {
   padding:8px 15px;
   color:white;
   cursor:pointer;
-  border-radius:4px;
 }
 
 .section { display:none; padding:20px; }
 
-h2 {
-  background:#0b3d91;
-  padding:10px;
-  border-radius:4px;
-}
-
 input {
   padding:8px;
   margin:5px;
-  width:200px;
   background:#2b2b2b;
   border:none;
   color:white;
-}
-
-button {
-  padding:8px 12px;
-  cursor:pointer;
-  border:none;
-  background:#0b3d91;
-  color:white;
-  border-radius:4px;
-}
-
-.card {
-  background:#1e1e1e;
-  border-left:4px solid #0b3d91;
-  padding:12px;
-  margin-top:10px;
-  border-radius:6px;
 }
 </style>
 </head>
@@ -73,42 +41,13 @@ button {
 <header>Lambeth PNC</header>
 
 <nav>
-<button onclick="showSection('lookup')">PNC Lookup</button>
-<button onclick="showSection('vehicles')">Vehicle Lookup</button>
-<button onclick="showSection('warrants')">Warrants</button>
 <button onclick="showSection('oc')">Create OC</button>
+<button onclick="showSection('vehicles')">Vehicles</button>
+<button onclick="showSection('people')">People</button>
 <button onclick="logout()">Logout</button>
 </nav>
 
-<!-- PERSON LOOKUP -->
-<div id="lookup" class="section">
-<h2>Person Lookup</h2>
-<input id="searchName" placeholder="Enter Name">
-<button onclick="searchPerson()">Search</button>
-<div id="personResult"></div>
-</div>
-
-<!-- VEHICLE -->
-<div id="vehicles" class="section">
-<h2>Vehicle Lookup</h2>
-<input id="searchPlate" placeholder="Enter Plate">
-<button onclick="searchVehicle()">Search</button>
-<div id="vehicleResult"></div>
-</div>
-
-<!-- WARRANTS -->
-<div id="warrants" class="section">
-<h2>Warrants</h2>
-
-<div id="warrantList"></div>
-
-<h3>Create Warrant</h3>
-<input id="warrantName" placeholder="Name">
-<input id="warrantReason" placeholder="Reason">
-<button onclick="createWarrant()">Create</button>
-</div>
-
-<!-- CIV OC -->
+<!-- OC -->
 <div id="oc" class="section">
 <h2>Create OC</h2>
 <input id="ocName" placeholder="Name"><br>
@@ -119,27 +58,30 @@ button {
 <button onclick="createOC()">Create</button>
 </div>
 
+<!-- VEHICLES -->
+<div id="vehicles" class="section">
+<h2>Vehicles</h2>
+<input id="vPlate" placeholder="Plate">
+<input id="vColour" placeholder="Colour">
+<input id="vReason" placeholder="Reason">
+<button onclick="addVehicle()">Add</button>
+
+<div id="vehicleList"></div>
+</div>
+
+<!-- PEOPLE -->
+<div id="people" class="section">
+<h2>People</h2>
+<div id="peopleList"></div>
+</div>
+
 <script>
 const API = "/api/storage";
-
-async function getData(key){
-  const res = await fetch(API + "?key=" + key);
-  const data = await res.json();
-  return data.value || {};
-}
-
-async function saveData(key, value){
-  await fetch(API,{
-    method:"POST",
-    headers:{"Content-Type":"application/json"},
-    body:JSON.stringify({key,value})
-  });
-}
 
 let currentUser = JSON.parse(localStorage.getItem("currentUser"));
 
 if(!currentUser){
-  window.location.href = "/";
+  window.location.href = "index.html";
 }
 
 function showSection(id){
@@ -149,119 +91,25 @@ function showSection(id){
 
 function logout(){
   localStorage.removeItem("currentUser");
-  window.location.href = "/";
+  window.location.href = "index.html";
 }
 
-//////////////////////////////////////////////////
-// PERSON SEARCH
-//////////////////////////////////////////////////
+async function getData(key){
+  const res = await fetch(API + "?key=" + key);
+  const data = await res.json();
+  return data.value || {};
+}
 
-async function searchPerson(){
-  const name = document.getElementById("searchName").value.toLowerCase();
-  const OCs = await getData("OCs");
-
-  const box = document.getElementById("personResult");
-  box.innerHTML = "";
-
-  const found = OCs.filter(o => o.name.toLowerCase().includes(name));
-
-  if(found.length === 0){
-    box.innerHTML = "No record found";
-    return;
-  }
-
-  found.forEach(o=>{
-    box.innerHTML += `
-    <div class="card">
-      <h3>${o.name}</h3>
-      <p>DOB: ${o.birthday}</p>
-      <p>Address: ${o.address}</p>
-      <p>Marks: ${o.marks}</p>
-      ${currentUser.type==="MET" ? `<button onclick="quickWarrant('${o.name}')">Add Warrant</button>` : ""}
-    </div>`;
+async function saveData(key,value){
+  await fetch(API,{
+    method:"POST",
+    headers:{"Content-Type":"application/json"},
+    body:JSON.stringify({key,value})
   });
 }
 
 //////////////////////////////////////////////////
-// VEHICLE SEARCH
-//////////////////////////////////////////////////
-
-async function searchVehicle(){
-  const plate = document.getElementById("searchPlate").value.toLowerCase();
-  const users = await getData("users");
-
-  let found = null;
-
-  for(const u in users){
-    (users[u].vehicles || []).forEach(v=>{
-      if(v.plate.toLowerCase() === plate){
-        found = v;
-      }
-    });
-  }
-
-  const box = document.getElementById("vehicleResult");
-
-  if(!found){
-    box.innerHTML = "No vehicle found";
-    return;
-  }
-
-  box.innerHTML = `
-  <div class="card">
-    <h3>${found.plate}</h3>
-    <p>Colour: ${found.colour}</p>
-    <p>Reason: ${found.reason}</p>
-  </div>`;
-}
-
-//////////////////////////////////////////////////
-// WARRANT SYSTEM
-//////////////////////////////////////////////////
-
-async function createWarrant(){
-  const name = document.getElementById("warrantName").value;
-  const reason = document.getElementById("warrantReason").value;
-
-  if(!name || !reason) return;
-
-  const warrants = await getData("warrants") || [];
-
-  warrants.push({
-    name,
-    reason,
-    officer: currentUser.username,
-    date: new Date().toLocaleString()
-  });
-
-  await saveData("warrants", warrants);
-  loadWarrants();
-}
-
-function quickWarrant(name){
-  document.getElementById("warrantName").value = name;
-  showSection("warrants");
-}
-
-async function loadWarrants(){
-  const list = document.getElementById("warrantList");
-  const warrants = await getData("warrants") || [];
-
-  list.innerHTML = "";
-
-  warrants.forEach(w=>{
-    list.innerHTML += `
-    <div class="card">
-      <h3>${w.name}</h3>
-      <p>Reason: ${w.reason}</p>
-      <p>Officer: ${w.officer}</p>
-      <p>Date: ${w.date}</p>
-    </div>`;
-  });
-}
-
-//////////////////////////////////////////////////
-// OC CREATION
+// OC
 //////////////////////////////////////////////////
 
 async function createOC(){
@@ -277,7 +125,55 @@ async function createOC(){
   });
 
   await saveData("OCs", OCs);
-  alert("OC Created");
+  alert("OC created");
+}
+
+//////////////////////////////////////////////////
+// VEHICLES
+//////////////////////////////////////////////////
+
+async function addVehicle(){
+  const users = await getData("users");
+
+  if(!users[currentUser.username].vehicles){
+    users[currentUser.username].vehicles = [];
+  }
+
+  users[currentUser.username].vehicles.push({
+    plate: vPlate.value,
+    colour: vColour.value,
+    reason: vReason.value
+  });
+
+  await saveData("users", users);
+  loadVehicles();
+}
+
+async function loadVehicles(){
+  const users = await getData("users");
+  const list = vehicleList;
+  list.innerHTML = "";
+
+  const vehicles = users[currentUser.username].vehicles || [];
+
+  vehicles.forEach(v=>{
+    list.innerHTML += `<p>${v.plate} - ${v.reason}</p>`;
+  });
+}
+
+//////////////////////////////////////////////////
+// PEOPLE (MET sees all OCs)
+//////////////////////////////////////////////////
+
+async function loadPeople(){
+  const OCs = await getData("OCs");
+  const list = peopleList;
+
+  list.innerHTML = "";
+
+  OCs.forEach(o=>{
+    list.innerHTML += `<p>${o.name} - ${o.address}</p>`;
+  });
 }
 
 //////////////////////////////////////////////////
@@ -285,14 +181,14 @@ async function createOC(){
 //////////////////////////////////////////////////
 
 if(currentUser.type === "Civilian"){
-  document.getElementById("lookup").style.display = "none";
   document.getElementById("vehicles").style.display = "none";
-  document.getElementById("warrants").style.display = "none";
+  document.getElementById("people").style.display = "none";
   showSection("oc");
 } else {
   document.getElementById("oc").style.display = "none";
-  showSection("lookup");
-  loadWarrants();
+  showSection("vehicles");
+  loadVehicles();
+  loadPeople();
 }
 </script>
 
