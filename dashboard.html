@@ -33,9 +33,6 @@ button.deleteBtn { background:#f44336; color:white; }
 <button id="reportsButton" onclick="showSection('reports')">Reports</button>
 <button id="vehiclesButton" onclick="showSection('vehicles')">Vehicles</button>
 <button id="peopleButton" onclick="showSection('people')">People</button>
-<button id="ocButton" onclick="showSection('ocForm')">OC Form</button>
-<button id="callButton" onclick="showSection('callForm')">Make Call</button>
-<button id="callDashboardButton" onclick="showSection('callDashboard')">Calls Dashboard</button>
 <button onclick="logout()">Logout</button>
 </nav>
 
@@ -51,10 +48,11 @@ button.deleteBtn { background:#f44336; color:white; }
 <!-- Vehicles -->
 <section id="vehicles" class="panel">
 <h2>Vehicles</h2>
-<table id="vehiclesTable"><tr><th>ID</th><th>Colour</th><th>Plate</th><th>Brand</th><th>Actions</th></tr></table>
+<table id="vehiclesTable"><tr><th>ID</th><th>Colour</th><th>Plate</th><th>Brand</th><th>Reason</th><th>Actions</th></tr></table>
 <input type="text" id="vehicleColour" placeholder="Colour">
 <input type="text" id="vehiclePlate" placeholder="Plate">
 <input type="text" id="vehicleBrand" placeholder="Brand">
+<input type="text" id="vehicleReason" placeholder="Reason (e.g., speeding)">
 <button class="addBtn" onclick="addVehicle()">Add Vehicle</button>
 </section>
 
@@ -64,38 +62,6 @@ button.deleteBtn { background:#f44336; color:white; }
 <table id="peopleTable"><tr><th>ID</th><th>Name</th><th>Actions</th></tr></table>
 <input type="text" id="peopleInput" placeholder="Person name">
 <button class="addBtn" onclick="addPerson()">Add Person</button>
-</section>
-
-<!-- OC Form (Civilian only) -->
-<section id="ocForm" class="panel">
-<h2>Create OC</h2>
-<input type="text" id="ocName" placeholder="RP Name"><br>
-<input type="date" id="ocBirthday"><br>
-<input type="text" id="ocAddress" placeholder="RP Address"><br>
-<input type="text" id="ocGender" placeholder="Gender"><br>
-<input type="text" id="ocEthnicity" placeholder="Ethnicity"><br>
-<input type="text" id="ocMarks" placeholder="Distinguishing Marks"><br>
-<button class="addBtn" onclick="createOC()">Create OC</button>
-<p class="error" id="ocError"></p>
-<p class="success" id="ocSuccess"></p>
-</section>
-
-<!-- Call Form (Civilian only) -->
-<section id="callForm" class="panel">
-<h2>Submit a Call</h2>
-<input type="text" id="callName" placeholder="Caller Name"><br>
-<input type="text" id="callType" placeholder="Incident Type"><br>
-<input type="text" id="callLocation" placeholder="Location"><br>
-<textarea id="callDesc" placeholder="Description"></textarea><br>
-<button class="addBtn" onclick="submitCall()">Submit Call</button>
-<p class="error" id="callError"></p>
-<p class="success" id="callSuccess"></p>
-</section>
-
-<!-- Call Dashboard (MET only) -->
-<section id="callDashboard" class="panel">
-<h2>Incoming Calls</h2>
-<div id="callsList"></div>
 </section>
 </main>
 
@@ -147,10 +113,47 @@ function editReport(i){const d=getData('reports');const v=prompt("Edit report:",
 function deleteReport(i){const d=getData('reports');if(confirm("Delete this report?")){d.splice(i,1);saveData('reports',d);loadReports();}}
 
 // Vehicles
-function loadVehicles(){const r=getData('vehicles');const t=document.getElementById('vehiclesTable');t.innerHTML='<tr><th>ID</th><th>Colour</th><th>Plate</th><th>Brand</th><th>Actions</th></tr>';r.forEach((v,i)=>{const row=t.insertRow();row.insertCell(0).innerText=i+1;row.insertCell(1).innerText=v.colour;row.insertCell(2).innerText=v.plate;row.insertCell(3).innerText=v.brand;row.insertCell(4).innerHTML=`<button class="editBtn" onclick="editVehicle(${i})">Edit</button> <button class="deleteBtn" onclick="deleteVehicle(${i})">Delete</button>`;});}
-function addVehicle(){const c=document.getElementById('vehicleColour').value.trim(),p=document.getElementById('vehiclePlate').value.trim(),b=document.getElementById('vehicleBrand').value.trim();if(!c||!p||!b)return;const d=getData('vehicles');d.push({colour:c,plate:p,brand:b});saveData('vehicles',d);document.getElementById('vehicleColour').value='';document.getElementById('vehiclePlate').value='';document.getElementById('vehicleBrand').value='';loadVehicles();}
-function editVehicle(i){const d=getData('vehicles');const v=d[i];const c=prompt("Colour:",v.colour),p=prompt("Plate:",v.plate),b=prompt("Brand:",v.brand);if(c!==null&&p!==null&&b!==null){d[i]={colour:c,plate:p,brand:b};saveData('vehicles',d);loadVehicles();}}
-function deleteVehicle(i){const d=getData('vehicles');if(confirm("Delete this vehicle?")){d.splice(i,1);saveData('vehicles',d);loadVehicles();}}
+function loadVehicles(){
+  const r=getData('vehicles'); 
+  const t=document.getElementById('vehiclesTable');
+  t.innerHTML='<tr><th>ID</th><th>Colour</th><th>Plate</th><th>Brand</th><th>Reason</th><th>Actions</th></tr>';
+  r.forEach((v,i)=>{
+    const row=t.insertRow();
+    row.insertCell(0).innerText=i+1;
+    row.insertCell(1).innerText=v.colour;
+    row.insertCell(2).innerText=v.plate;
+    row.insertCell(3).innerText=v.brand;
+    row.insertCell(4).innerText=v.reason;
+    row.insertCell(5).innerHTML=`<button class="editBtn" onclick="editVehicle(${i})">Edit</button> <button class="deleteBtn" onclick="deleteVehicle(${i})">Delete</button>`;
+  });
+}
+function addVehicle(){
+  const c=document.getElementById('vehicleColour').value.trim();
+  const p=document.getElementById('vehiclePlate').value.trim();
+  const b=document.getElementById('vehicleBrand').value.trim();
+  const r=document.getElementById('vehicleReason').value.trim();
+  if(!c||!p||!b||!r) return;
+  const d=getData('vehicles');
+  d.push({colour:c,plate:p,brand:b,reason:r});
+  saveData('vehicles',d);
+  document.getElementById('vehicleColour').value='';
+  document.getElementById('vehiclePlate').value='';
+  document.getElementById('vehicleBrand').value='';
+  document.getElementById('vehicleReason').value='';
+  loadVehicles();
+}
+function editVehicle(i){
+  const d=getData('vehicles');
+  const v=d[i];
+  const c=prompt("Colour:",v.colour);
+  const p=prompt("Plate:",v.plate);
+  const b=prompt("Brand:",v.brand);
+  const r=prompt("Reason:",v.reason);
+  if(c!==null && p!==null && b!==null && r!==null){ d[i]={colour:c,plate:p,brand:b,reason:r}; saveData('vehicles',d); loadVehicles();}
+}
+function deleteVehicle(i){
+  const d=getData('vehicles'); if(confirm("Delete this vehicle?")){ d.splice(i,1); saveData('vehicles',d); loadVehicles(); }
+}
 
 // People
 function loadPeople(){const r=getData('people');const t=document.getElementById('peopleTable');t.innerHTML='<tr><th>ID</th><th>Name</th><th>Actions</th></tr>';r.forEach((v,i)=>{const row=t.insertRow();row.insertCell(0).innerText=i+1;row.insertCell(1).innerText=v;row.insertCell(2).innerHTML=`<button class="editBtn" onclick="editPerson(${i})">Edit</button> <button class="deleteBtn" onclick="deletePerson(${i})">Delete</button>`;});}
@@ -158,56 +161,10 @@ function addPerson(){const v=document.getElementById('peopleInput').value.trim()
 function editPerson(i){const d=getData('people');const v=d[i];const n=prompt("Name:",v);if(n!==null){d[i]=n;saveData('people',d);loadPeople();}}
 function deletePerson(i){const d=getData('people');if(confirm("Delete this person?")){d.splice(i,1);saveData('people',d);loadPeople();}}
 
-// ===== CREATE OC & SUBMIT CALL (Civilian) =====
-function createOC(){
-  const name=document.getElementById('ocName').value.trim();
-  const birthday=document.getElementById('ocBirthday').value;
-  const address=document.getElementById('ocAddress').value.trim();
-  const gender=document.getElementById('ocGender').value.trim();
-  const ethnicity=document.getElementById('ocEthnicity').value.trim();
-  const marks=document.getElementById('ocMarks').value.trim();
-  if(!name||!birthday){document.getElementById('ocError').innerText='Name & Birthday required'; return;}
-  const OCs=getData('OCs'); OCs.push({name,birthday,address,gender,ethnicity,marks});
-  saveData('OCs',OCs);
-  document.getElementById('ocSuccess').innerText='OC created!';
-  document.getElementById('ocError').innerText='';
-  document.getElementById('ocName').value=''; document.getElementById('ocBirthday').value=''; document.getElementById('ocAddress').value='';
-  document.getElementById('ocGender').value=''; document.getElementById('ocEthnicity').value=''; document.getElementById('ocMarks').value='';
-}
-
-function submitCall(){
-  const caller=document.getElementById('callName').value.trim();
-  const type=document.getElementById('callType').value.trim();
-  const location=document.getElementById('callLocation').value.trim();
-  const desc=document.getElementById('callDesc').value.trim();
-  if(!caller||!type){document.getElementById('callError').innerText='Caller & Type required'; return;}
-  const calls=getData('calls'); calls.push({caller,type,location,desc});
-  saveData('calls',calls);
-  document.getElementById('callSuccess').innerText='Call submitted!';
-  document.getElementById('callError').innerText='';
-  document.getElementById('callName').value=''; document.getElementById('callType').value=''; document.getElementById('callLocation').value=''; document.getElementById('callDesc').value='';
-}
-
 // ===== LOAD DASHBOARD =====
 window.onload=function(){
   loadReports(); loadVehicles(); loadPeople();
-  if(currentUser.type==='MET'){
-    document.getElementById('ocForm').style.display='none';
-    document.getElementById('callForm').style.display='none';
-    document.getElementById('callDashboard').style.display='block';
-    document.getElementById('ocButton').style.display='none';
-    document.getElementById('callButton').style.display='none';
-    document.getElementById('callDashboardButton').style.display='block';
-    showSection('reports');
-  } else {
-    document.getElementById('ocForm').style.display='block';
-    document.getElementById('callForm').style.display='block';
-    document.getElementById('callDashboard').style.display='none';
-    document.getElementById('ocButton').style.display='block';
-    document.getElementById('callButton').style.display='block';
-    document.getElementById('callDashboardButton').style.display='none';
-    showSection('ocForm');
-  }
+  showSection('reports');
 };
 </script>
 </body>
