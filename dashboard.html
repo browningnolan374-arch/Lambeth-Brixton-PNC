@@ -1,164 +1,300 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
 <meta charset="UTF-8">
 <title>Lambeth PNC Dashboard</title>
+
 <style>
-body{ font-family:Arial,sans-serif; background:#121212; color:#eee; margin:0; padding:0; }
-header{ background:#0b3d91; padding:15px; text-align:center; font-size:24px; font-weight:bold; }
-nav{ display:flex; justify-content:center; gap:5px; margin:10px; flex-wrap:wrap; }
-button{ padding:5px 10px; border:none; border-radius:3px; cursor:pointer; background:#0b3d91; color:white; }
-.section{ display:none; padding:10px; max-width:1000px; margin:auto; }
-table{ width:100%; border-collapse:collapse; margin-bottom:10px; }
-th,td{ padding:8px; border-bottom:1px solid #333; text-align:left; }
+body { margin:0; font-family:Arial; background:#121212; color:#eee; }
+
+header {
+  background:#0b3d91;
+  padding:15px;
+  text-align:center;
+  font-size:24px;
+  font-weight:bold;
+}
+
+nav {
+  display:flex;
+  justify-content:center;
+  background:#0a2c70;
+  padding:10px;
+  gap:10px;
+}
+
+nav button {
+  background:#1a4dab;
+  border:none;
+  padding:8px 15px;
+  color:white;
+  cursor:pointer;
+  border-radius:4px;
+}
+
+.section { display:none; padding:20px; }
+
+h2 {
+  background:#0b3d91;
+  padding:10px;
+  border-radius:4px;
+}
+
+input {
+  padding:8px;
+  margin:5px;
+  width:200px;
+  background:#2b2b2b;
+  border:none;
+  color:white;
+}
+
+button {
+  padding:8px 12px;
+  cursor:pointer;
+  border:none;
+  background:#0b3d91;
+  color:white;
+  border-radius:4px;
+}
+
+.card {
+  background:#1e1e1e;
+  border-left:4px solid #0b3d91;
+  padding:12px;
+  margin-top:10px;
+  border-radius:6px;
+}
 </style>
 </head>
+
 <body>
-<header>Lambeth PNC Dashboard</header>
+
+<header>Lambeth PNC</header>
 
 <nav>
-  <button onclick="showSection('reports')">Reports</button>
-  <button onclick="showSection('vehicles')">Vehicles</button>
-  <button onclick="showSection('people')">People</button>
-  <button onclick="showSection('OCs')">Person Logs</button>
-  <button onclick="logout()">Logout</button>
+<button onclick="showSection('lookup')">PNC Lookup</button>
+<button onclick="showSection('vehicles')">Vehicle Lookup</button>
+<button onclick="showSection('warrants')">Warrants</button>
+<button onclick="showSection('oc')">Create OC</button>
+<button onclick="logout()">Logout</button>
 </nav>
 
-<!-- Sections -->
-<section id="reports" class="section">
-<h2>Reports</h2>
-<table id="reportsTable"><tr><th>ID</th><th>Description</th></tr></table>
-<input id="reportInput" placeholder="Report description">
-<button onclick="addReport()">Add Report</button>
-</section>
+<!-- PERSON LOOKUP -->
+<div id="lookup" class="section">
+<h2>Person Lookup</h2>
+<input id="searchName" placeholder="Enter Name">
+<button onclick="searchPerson()">Search</button>
+<div id="personResult"></div>
+</div>
 
-<section id="vehicles" class="section">
-<h2>Vehicles</h2>
-<table id="vehiclesTable"><tr><th>ID</th><th>Colour</th><th>Plate</th><th>Reason</th></tr></table>
-<input id="vehicleColour" placeholder="Colour">
-<input id="vehiclePlate" placeholder="Plate">
-<input id="vehicleReason" placeholder="Reason (e.g., speeding)">
-<button onclick="addVehicle()">Add Vehicle</button>
-</section>
+<!-- VEHICLE -->
+<div id="vehicles" class="section">
+<h2>Vehicle Lookup</h2>
+<input id="searchPlate" placeholder="Enter Plate">
+<button onclick="searchVehicle()">Search</button>
+<div id="vehicleResult"></div>
+</div>
 
-<section id="people" class="section">
-<h2>People</h2>
-<table id="peopleTable"><tr><th>ID</th><th>Name</th></tr></table>
-<input id="peopleInput" placeholder="Person name">
-<button onclick="addPerson()">Add Person</button>
-</section>
+<!-- WARRANTS -->
+<div id="warrants" class="section">
+<h2>Warrants</h2>
 
-<section id="OCs" class="section">
+<div id="warrantList"></div>
+
+<h3>Create Warrant</h3>
+<input id="warrantName" placeholder="Name">
+<input id="warrantReason" placeholder="Reason">
+<button onclick="createWarrant()">Create</button>
+</div>
+
+<!-- CIV OC -->
+<div id="oc" class="section">
 <h2>Create OC</h2>
-<input id="ocName" placeholder="RP Name"><br>
+<input id="ocName" placeholder="Name"><br>
 <input id="ocBirthday" type="date"><br>
-<input id="ocAddress" placeholder="RP Address"><br>
+<input id="ocAddress" placeholder="Address"><br>
 <input id="ocGender" placeholder="Gender"><br>
-<input id="ocEthnicity" placeholder="Ethnicity"><br>
-<input id="ocMarks" placeholder="Distinguishing Marks"><br>
-<button onclick="createOC()">Create OC</button>
-</section>
+<input id="ocMarks" placeholder="Marks"><br>
+<button onclick="createOC()">Create</button>
+</div>
 
 <script>
-// KV helpers
-async function getDataFromKV(key){
-  const res = await fetch(`/api/storage?key=${key}`);
+const API = "/api/storage";
+
+async function getData(key){
+  const res = await fetch(API + "?key=" + key);
   const data = await res.json();
   return data.value || {};
 }
-async function saveDataToKV(key,value){
-  await fetch('/api/storage',{
-    method:'POST',
-    headers:{'Content-Type':'application/json'},
-    body: JSON.stringify({key,value})
+
+async function saveData(key, value){
+  await fetch(API,{
+    method:"POST",
+    headers:{"Content-Type":"application/json"},
+    body:JSON.stringify({key,value})
   });
 }
 
-// Current user
-const currentUser = JSON.parse(sessionStorage.getItem('currentUser'));
-if(!currentUser){ window.location.href='login.html'; }
+let currentUser = JSON.parse(localStorage.getItem("currentUser"));
 
-// Role-based visibility
-if(currentUser.type==='Civilian'){
-  document.getElementById('reports').style.display='none';
-  document.getElementById('vehicles').style.display='none';
-  document.getElementById('people').style.display='none';
-} else { 
-  document.getElementById('OCs').style.display='none';
+if(!currentUser){
+  window.location.href = "/";
 }
 
-// Show section
 function showSection(id){
-  document.querySelectorAll('.section').forEach(s=>s.style.display='none');
-  document.getElementById(id).style.display='block';
+  document.querySelectorAll(".section").forEach(s=>s.style.display="none");
+  document.getElementById(id).style.display="block";
 }
 
-// Logout
-function logout(){ sessionStorage.removeItem('currentUser'); window.location.href='login.html'; }
-
-// CRUD
-async function loadReports(){
-  const users = await getDataFromKV('users');
-  const r = users[currentUser.username].reports || [];
-  const t = document.getElementById('reportsTable'); t.innerHTML='<tr><th>ID</th><th>Description</th></tr>';
-  r.forEach((v,i)=>{ const row=t.insertRow(); row.insertCell(0).innerText=i+1; row.insertCell(1).innerText=v; });
-}
-async function addReport(){
-  const val = document.getElementById('reportInput').value.trim(); if(!val) return;
-  const users = await getDataFromKV('users');
-  users[currentUser.username].reports.push(val);
-  await saveDataToKV('users',users);
-  document.getElementById('reportInput').value='';
-  loadReports();
+function logout(){
+  localStorage.removeItem("currentUser");
+  window.location.href = "/";
 }
 
-async function loadVehicles(){
-  const users = await getDataFromKV('users');
-  const v = users[currentUser.username].vehicles || [];
-  const t = document.getElementById('vehiclesTable'); t.innerHTML='<tr><th>ID</th><th>Colour</th><th>Plate</th><th>Reason</th></tr>';
-  v.forEach((veh,i)=>{ const row=t.insertRow(); row.insertCell(0).innerText=i+1; row.insertCell(1).innerText=veh.colour; row.insertCell(2).innerText=veh.plate; row.insertCell(3).innerText=veh.reason; });
-}
-async function addVehicle(){
-  const colour=document.getElementById('vehicleColour').value.trim();
-  const plate=document.getElementById('vehiclePlate').value.trim();
-  const reason=document.getElementById('vehicleReason').value.trim();
-  if(!colour||!plate||!reason) return;
-  const users = await getDataFromKV('users');
-  users[currentUser.username].vehicles.push({colour,plate,reason});
-  await saveDataToKV('users',users);
-  document.getElementById('vehicleColour').value='';
-  document.getElementById('vehiclePlate').value='';
-  document.getElementById('vehicleReason').value='';
-  loadVehicles();
+//////////////////////////////////////////////////
+// PERSON SEARCH
+//////////////////////////////////////////////////
+
+async function searchPerson(){
+  const name = document.getElementById("searchName").value.toLowerCase();
+  const OCs = await getData("OCs");
+
+  const box = document.getElementById("personResult");
+  box.innerHTML = "";
+
+  const found = OCs.filter(o => o.name.toLowerCase().includes(name));
+
+  if(found.length === 0){
+    box.innerHTML = "No record found";
+    return;
+  }
+
+  found.forEach(o=>{
+    box.innerHTML += `
+    <div class="card">
+      <h3>${o.name}</h3>
+      <p>DOB: ${o.birthday}</p>
+      <p>Address: ${o.address}</p>
+      <p>Marks: ${o.marks}</p>
+      ${currentUser.type==="MET" ? `<button onclick="quickWarrant('${o.name}')">Add Warrant</button>` : ""}
+    </div>`;
+  });
 }
 
-async function loadPeople(){
-  const users = await getDataFromKV('users');
-  const p = users[currentUser.username].people || [];
-  const t = document.getElementById('peopleTable'); t.innerHTML='<tr><th>ID</th><th>Name</th></tr>';
-  p.forEach((person,i)=>{ const row=t.insertRow(); row.insertCell(0).innerText=i+1; row.insertCell(1).innerText=person; });
+//////////////////////////////////////////////////
+// VEHICLE SEARCH
+//////////////////////////////////////////////////
+
+async function searchVehicle(){
+  const plate = document.getElementById("searchPlate").value.toLowerCase();
+  const users = await getData("users");
+
+  let found = null;
+
+  for(const u in users){
+    (users[u].vehicles || []).forEach(v=>{
+      if(v.plate.toLowerCase() === plate){
+        found = v;
+      }
+    });
+  }
+
+  const box = document.getElementById("vehicleResult");
+
+  if(!found){
+    box.innerHTML = "No vehicle found";
+    return;
+  }
+
+  box.innerHTML = `
+  <div class="card">
+    <h3>${found.plate}</h3>
+    <p>Colour: ${found.colour}</p>
+    <p>Reason: ${found.reason}</p>
+  </div>`;
 }
-async function addPerson(){
-  const val = document.getElementById('peopleInput').value.trim(); if(!val) return;
-  const users = await getDataFromKV('users');
-  users[currentUser.username].people.push(val);
-  await saveDataToKV('users',users);
-  document.getElementById('peopleInput').value='';
-  loadPeople();
+
+//////////////////////////////////////////////////
+// WARRANT SYSTEM
+//////////////////////////////////////////////////
+
+async function createWarrant(){
+  const name = document.getElementById("warrantName").value;
+  const reason = document.getElementById("warrantReason").value;
+
+  if(!name || !reason) return;
+
+  const warrants = await getData("warrants") || [];
+
+  warrants.push({
+    name,
+    reason,
+    officer: currentUser.username,
+    date: new Date().toLocaleString()
+  });
+
+  await saveData("warrants", warrants);
+  loadWarrants();
 }
+
+function quickWarrant(name){
+  document.getElementById("warrantName").value = name;
+  showSection("warrants");
+}
+
+async function loadWarrants(){
+  const list = document.getElementById("warrantList");
+  const warrants = await getData("warrants") || [];
+
+  list.innerHTML = "";
+
+  warrants.forEach(w=>{
+    list.innerHTML += `
+    <div class="card">
+      <h3>${w.name}</h3>
+      <p>Reason: ${w.reason}</p>
+      <p>Officer: ${w.officer}</p>
+      <p>Date: ${w.date}</p>
+    </div>`;
+  });
+}
+
+//////////////////////////////////////////////////
+// OC CREATION
+//////////////////////////////////////////////////
 
 async function createOC(){
-  const name=document.getElementById('ocName').value.trim();
-  if(!name) return;
-  const users = await getDataFromKV('users');
-  const OC={ name, birthday:document.getElementById('ocBirthday').value, address:document.getElementById('ocAddress').value, gender:document.getElementById('ocGender').value, ethnicity:document.getElementById('ocEthnicity').value, marks:document.getElementById('ocMarks').value };
-  users[currentUser.username].OCs.push(OC);
-  await saveDataToKV('users',users);
-  alert('OC Created!');
-  document.getElementById('ocName').value=''; document.getElementById('ocBirthday').value=''; document.getElementById('ocAddress').value=''; document.getElementById('ocGender').value=''; document.getElementById('ocEthnicity').value=''; document.getElementById('ocMarks').value='';
+  const OCs = await getData("OCs") || [];
+
+  OCs.push({
+    name: ocName.value,
+    birthday: ocBirthday.value,
+    address: ocAddress.value,
+    gender: ocGender.value,
+    marks: ocMarks.value,
+    createdBy: currentUser.username
+  });
+
+  await saveData("OCs", OCs);
+  alert("OC Created");
 }
 
-loadReports(); loadVehicles(); loadPeople();
+//////////////////////////////////////////////////
+// ROLE CONTROL
+//////////////////////////////////////////////////
+
+if(currentUser.type === "Civilian"){
+  document.getElementById("lookup").style.display = "none";
+  document.getElementById("vehicles").style.display = "none";
+  document.getElementById("warrants").style.display = "none";
+  showSection("oc");
+} else {
+  document.getElementById("oc").style.display = "none";
+  showSection("lookup");
+  loadWarrants();
+}
 </script>
+
 </body>
 </html>
