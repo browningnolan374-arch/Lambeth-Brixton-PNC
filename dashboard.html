@@ -4,216 +4,161 @@
 <meta charset="UTF-8">
 <title>Lambeth PNC Dashboard</title>
 <style>
-body { font-family: Arial, sans-serif; background:#121212; color:#eee; margin:0; padding:0; }
-header { background:#0b3d91; color:white; padding:15px; text-align:center; font-size:28px; font-weight:bold; }
-nav { display:flex; justify-content:center; background:#0a2c70; padding:10px; gap:10px; flex-wrap:wrap;}
-nav button { background:#1a4dab; color:white; border:none; padding:8px 15px; border-radius:4px; cursor:pointer; font-weight:bold; }
-nav button:hover { background:#3a6fc0; }
-main { padding:20px; max-width:1000px; margin:auto; }
-.panel { background:#1e1e1e; padding:10px; border-radius:4px; margin-bottom:15px; box-shadow:0 2px 4px rgba(0,0,0,0.5); display:none; }
-table { width:100%; border-collapse:collapse; margin-bottom:10px; }
-th, td { padding:8px; text-align:left; border-bottom:1px solid #333; }
-th { background:#0b3d91; }
-input, textarea { padding:5px; margin-top:5px; border-radius:3px; border:none; background:#2b2b2b; color:#eee; width:200px; }
-textarea { width:95%; height:60px; }
-button { padding:5px 10px; border:none; border-radius:3px; cursor:pointer; }
-button.addBtn { background:#0b3d91; color:white; margin-top:5px; }
-button.addBtn:hover { background:#3a6fc0; }
-button.editBtn { background:#4caf50; color:white; }
-button.deleteBtn { background:#f44336; color:white; }
-.error { color:red; margin-top:5px; }
-.success { color:lime; margin-top:5px; }
+body{ font-family:Arial,sans-serif; background:#121212; color:#eee; margin:0; padding:0; }
+header{ background:#0b3d91; padding:15px; text-align:center; font-size:24px; font-weight:bold; }
+nav{ display:flex; justify-content:center; gap:5px; margin:10px; flex-wrap:wrap; }
+button{ padding:5px 10px; border:none; border-radius:3px; cursor:pointer; background:#0b3d91; color:white; }
+.section{ display:none; padding:10px; max-width:1000px; margin:auto; }
+table{ width:100%; border-collapse:collapse; margin-bottom:10px; }
+th,td{ padding:8px; border-bottom:1px solid #333; text-align:left; }
 </style>
 </head>
 <body>
-
 <header>Lambeth PNC Dashboard</header>
 
-<nav id="navBar">
-<!-- Buttons will be injected based on user type -->
+<nav>
+  <button onclick="showSection('reports')">Reports</button>
+  <button onclick="showSection('vehicles')">Vehicles</button>
+  <button onclick="showSection('people')">People</button>
+  <button onclick="showSection('OCs')">Person Logs</button>
+  <button onclick="logout()">Logout</button>
 </nav>
 
-<main>
-<!-- Reports (MET Only) -->
-<section id="reports" class="panel">
+<!-- Sections -->
+<section id="reports" class="section">
 <h2>Reports</h2>
-<table id="reportsTable"><tr><th>ID</th><th>Description</th><th>Actions</th></tr></table>
-<input type="text" id="reportInput" placeholder="Report description">
-<button class="addBtn" onclick="addReport()">Add Report</button>
+<table id="reportsTable"><tr><th>ID</th><th>Description</th></tr></table>
+<input id="reportInput" placeholder="Report description">
+<button onclick="addReport()">Add Report</button>
 </section>
 
-<!-- Vehicles (MET Only) -->
-<section id="vehicles" class="panel">
+<section id="vehicles" class="section">
 <h2>Vehicles</h2>
-<table id="vehiclesTable"><tr><th>ID</th><th>Colour</th><th>Plate</th><th>Brand</th><th>Reason</th><th>Actions</th></tr></table>
-<input type="text" id="vehicleColour" placeholder="Colour">
-<input type="text" id="vehiclePlate" placeholder="Plate">
-<input type="text" id="vehicleBrand" placeholder="Brand">
-<input type="text" id="vehicleReason" placeholder="Reason (e.g., speeding)">
-<button class="addBtn" onclick="addVehicle()">Add Vehicle</button>
+<table id="vehiclesTable"><tr><th>ID</th><th>Colour</th><th>Plate</th><th>Reason</th></tr></table>
+<input id="vehicleColour" placeholder="Colour">
+<input id="vehiclePlate" placeholder="Plate">
+<input id="vehicleReason" placeholder="Reason (e.g., speeding)">
+<button onclick="addVehicle()">Add Vehicle</button>
 </section>
 
-<!-- People / OC logs -->
-<section id="people" class="panel">
-<h2>People / OC Logs</h2>
-<table id="peopleTable"><tr><th>ID</th><th>Name</th><th>Submitted By</th><th>Actions</th></tr></table>
-<input type="text" id="peopleInput" placeholder="Person name (OC)" style="display:none;">
-<button class="addBtn" id="addPersonBtn" style="display:none;" onclick="addPerson()">Add Person</button>
+<section id="people" class="section">
+<h2>People</h2>
+<table id="peopleTable"><tr><th>ID</th><th>Name</th></tr></table>
+<input id="peopleInput" placeholder="Person name">
+<button onclick="addPerson()">Add Person</button>
 </section>
 
-<!-- OC Form (Civilian Only) -->
-<section id="ocForm" class="panel">
+<section id="OCs" class="section">
 <h2>Create OC</h2>
-<input type="text" id="ocName" placeholder="RP Name"><br>
-<input type="date" id="ocBirthday"><br>
-<input type="text" id="ocAddress" placeholder="RP Address"><br>
-<input type="text" id="ocGender" placeholder="Gender"><br>
-<input type="text" id="ocEthnicity" placeholder="Ethnicity"><br>
-<input type="text" id="ocMarks" placeholder="Distinguishing Marks"><br>
-<button class="addBtn" onclick="createOC()">Create OC</button>
-<p class="error" id="ocError"></p>
-<p class="success" id="ocSuccess"></p>
+<input id="ocName" placeholder="RP Name"><br>
+<input id="ocBirthday" type="date"><br>
+<input id="ocAddress" placeholder="RP Address"><br>
+<input id="ocGender" placeholder="Gender"><br>
+<input id="ocEthnicity" placeholder="Ethnicity"><br>
+<input id="ocMarks" placeholder="Distinguishing Marks"><br>
+<button onclick="createOC()">Create OC</button>
 </section>
-
-</main>
 
 <script>
-// ===== CHECK LOGIN =====
-const currentUser = JSON.parse(localStorage.getItem('currentUser'));
-if(!currentUser) window.location.href='login.html';
-
-// ===== STORAGE =====
-function getUsers(){return JSON.parse(localStorage.getItem('users'))||{}}
-function saveUsers(users){localStorage.setItem('users',JSON.stringify(users))}
-function getData(type){const users=getUsers();return users[currentUser.username][type]||[]}
-function saveData(type,data){const users=getUsers();users[currentUser.username][type]=data;saveUsers(users)}
-
-// ===== NAV & SECTION DISPLAY =====
-const nav = document.getElementById('navBar');
-function setupDashboard(){
-    if(currentUser.type==='MET'){
-        nav.innerHTML=`<button onclick="showSection('reports')">Reports</button>
-                       <button onclick="showSection('vehicles')">Vehicles</button>
-                       <button onclick="showSection('people')">Person Logs</button>
-                       <button onclick="logout()">Logout</button>`;
-        showSection('reports');
-    } else {
-        nav.innerHTML=`<button onclick="showSection('ocForm')">Create OC</button>
-                       <button onclick="logout()">Logout</button>`;
-        showSection('ocForm');
-    }
+// KV helpers
+async function getDataFromKV(key){
+  const res = await fetch(`/api/storage?key=${key}`);
+  const data = await res.json();
+  return data.value || {};
 }
-function showSection(name){
-    document.querySelectorAll('main section.panel').forEach(s=>s.style.display='none');
-    document.getElementById(name)?.style.display='block';
+async function saveDataToKV(key,value){
+  await fetch('/api/storage',{
+    method:'POST',
+    headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({key,value})
+  });
 }
 
-// ===== LOGOUT =====
-function logout(){localStorage.removeItem('currentUser'); window.location.href='login.html'}
+// Current user
+const currentUser = JSON.parse(sessionStorage.getItem('currentUser'));
+if(!currentUser){ window.location.href='login.html'; }
 
-// ===== CRUD FUNCTIONS =====
-// Reports (MET Only)
-function loadReports(){
-    const r=getData('reports');
-    const t=document.getElementById('reportsTable');
-    t.innerHTML='<tr><th>ID</th><th>Description</th><th>Actions</th></tr>';
-    r.forEach((v,i)=>{
-        const row=t.insertRow();
-        row.insertCell(0).innerText=i+1;
-        row.insertCell(1).innerText=v;
-        row.insertCell(2).innerHTML=`<button class="editBtn" onclick="editReport(${i})">Edit</button> <button class="deleteBtn" onclick="deleteReport(${i})">Delete</button>`;
-    });
-}
-function addReport(){const v=document.getElementById('reportInput').value;if(!v)return;const d=getData('reports');d.push(v);saveData('reports',d);document.getElementById('reportInput').value='';loadReports();}
-function editReport(i){const d=getData('reports');const v=prompt("Edit report:",d[i]);if(v!==null){d[i]=v;saveData('reports',d);loadReports();}}
-function deleteReport(i){const d=getData('reports');if(confirm("Delete this report?")){d.splice(i,1);saveData('reports',d);loadReports();}}
-
-// Vehicles (MET Only)
-function loadVehicles(){
-    const r=getData('vehicles'); 
-    const t=document.getElementById('vehiclesTable');
-    t.innerHTML='<tr><th>ID</th><th>Colour</th><th>Plate</th><th>Brand</th><th>Reason</th><th>Actions</th></tr>';
-    r.forEach((v,i)=>{
-        const row=t.insertRow();
-        row.insertCell(0).innerText=i+1;
-        row.insertCell(1).innerText=v.colour;
-        row.insertCell(2).innerText=v.plate;
-        row.insertCell(3).innerText=v.brand;
-        row.insertCell(4).innerText=v.reason;
-        row.insertCell(5).innerHTML=`<button class="editBtn" onclick="editVehicle(${i})">Edit</button> <button class="deleteBtn" onclick="deleteVehicle(${i})">Delete</button>`;
-    });
-}
-function addVehicle(){
-    const c=document.getElementById('vehicleColour').value.trim();
-    const p=document.getElementById('vehiclePlate').value.trim();
-    const b=document.getElementById('vehicleBrand').value.trim();
-    const r=document.getElementById('vehicleReason').value.trim();
-    if(!c||!p||!b||!r)return;
-    const d=getData('vehicles');
-    d.push({colour:c,plate:p,brand:b,reason:r});
-    saveData('vehicles',d);
-    document.getElementById('vehicleColour').value='';
-    document.getElementById('vehiclePlate').value='';
-    document.getElementById('vehicleBrand').value='';
-    document.getElementById('vehicleReason').value='';
-    loadVehicles();
-}
-function editVehicle(i){
-    const d=getData('vehicles'); const v=d[i];
-    const c=prompt("Colour:",v.colour); const p=prompt("Plate:",v.plate);
-    const b=prompt("Brand:",v.brand); const r=prompt("Reason:",v.reason);
-    if(c!==null && p!==null && b!==null && r!==null){d[i]={colour:c,plate:p,brand:b,reason:r}; saveData('vehicles',d); loadVehicles();}
-}
-function deleteVehicle(i){const d=getData('vehicles'); if(confirm("Delete this vehicle?")){d.splice(i,1); saveData('vehicles',d); loadVehicles();}}
-
-// People / OC Logs
-function loadPeople(){
-    const users=getUsers();
-    let peopleList=[];
-    for(const u in users){ 
-        if(users[u].OCs) peopleList = peopleList.concat(users[u].OCs.map(o=>({...o, submittedBy:u})));
-    }
-    const t=document.getElementById('peopleTable');
-    t.innerHTML='<tr><th>ID</th><th>Name</th><th>Submitted By</th><th>Actions</th></tr>';
-    peopleList.forEach((v,i)=>{
-        const row=t.insertRow();
-        row.insertCell(0).innerText=i+1;
-        row.insertCell(1).innerText=v.name;
-        row.insertCell(2).innerText=v.submittedBy;
-        row.insertCell(3).innerHTML=currentUser.type==='MET'?`<button class="deleteBtn" onclick="deleteOC('${v.submittedBy}',${i})">Delete</button>`:'';
-    });
-}
-function deleteOC(user,i){
-    const users=getUsers();
-    if(users[user] && users[user].OCs){users[user].OCs.splice(i,1); saveUsers(users); loadPeople();}
+// Role-based visibility
+if(currentUser.type==='Civilian'){
+  document.getElementById('reports').style.display='none';
+  document.getElementById('vehicles').style.display='none';
+  document.getElementById('people').style.display='none';
+} else { 
+  document.getElementById('OCs').style.display='none';
 }
 
-// ===== CREATE OC (Civilian Only) =====
-function createOC(){
-    const n=document.getElementById('ocName').value.trim();
-    const b=document.getElementById('ocBirthday').value;
-    const a=document.getElementById('ocAddress').value.trim();
-    const g=document.getElementById('ocGender').value.trim();
-    const e=document.getElementById('ocEthnicity').value.trim();
-    const m=document.getElementById('ocMarks').value.trim();
-    const err=document.getElementById('ocError');
-    const success=document.getElementById('ocSuccess');
-    err.innerText=''; success.innerText='';
-    if(!n||!b||!a||!g||!e||!m){err.innerText='All fields required'; return;}
-    const users=getUsers();
-    if(!users[currentUser.username].OCs) users[currentUser.username].OCs=[];
-    users[currentUser.username].OCs.push({name:n,birthday:b,address:a,gender:g,ethnicity:e,marks:m});
-    saveUsers(users);
-    success.innerText='OC submitted!';
-    document.getElementById('ocName').value=''; document.getElementById('ocBirthday').value=''; document.getElementById('ocAddress').value=''; document.getElementById('ocGender').value=''; document.getElementById('ocEthnicity').value=''; document.getElementById('ocMarks').value='';
-    loadPeople();
+// Show section
+function showSection(id){
+  document.querySelectorAll('.section').forEach(s=>s.style.display='none');
+  document.getElementById(id).style.display='block';
 }
 
-// ===== LOAD DASHBOARD =====
-window.onload=function(){
-    setupDashboard();
-    if(currentUser.type==='MET'){loadReports(); loadVehicles(); loadPeople();}
+// Logout
+function logout(){ sessionStorage.removeItem('currentUser'); window.location.href='login.html'; }
+
+// CRUD
+async function loadReports(){
+  const users = await getDataFromKV('users');
+  const r = users[currentUser.username].reports || [];
+  const t = document.getElementById('reportsTable'); t.innerHTML='<tr><th>ID</th><th>Description</th></tr>';
+  r.forEach((v,i)=>{ const row=t.insertRow(); row.insertCell(0).innerText=i+1; row.insertCell(1).innerText=v; });
 }
+async function addReport(){
+  const val = document.getElementById('reportInput').value.trim(); if(!val) return;
+  const users = await getDataFromKV('users');
+  users[currentUser.username].reports.push(val);
+  await saveDataToKV('users',users);
+  document.getElementById('reportInput').value='';
+  loadReports();
+}
+
+async function loadVehicles(){
+  const users = await getDataFromKV('users');
+  const v = users[currentUser.username].vehicles || [];
+  const t = document.getElementById('vehiclesTable'); t.innerHTML='<tr><th>ID</th><th>Colour</th><th>Plate</th><th>Reason</th></tr>';
+  v.forEach((veh,i)=>{ const row=t.insertRow(); row.insertCell(0).innerText=i+1; row.insertCell(1).innerText=veh.colour; row.insertCell(2).innerText=veh.plate; row.insertCell(3).innerText=veh.reason; });
+}
+async function addVehicle(){
+  const colour=document.getElementById('vehicleColour').value.trim();
+  const plate=document.getElementById('vehiclePlate').value.trim();
+  const reason=document.getElementById('vehicleReason').value.trim();
+  if(!colour||!plate||!reason) return;
+  const users = await getDataFromKV('users');
+  users[currentUser.username].vehicles.push({colour,plate,reason});
+  await saveDataToKV('users',users);
+  document.getElementById('vehicleColour').value='';
+  document.getElementById('vehiclePlate').value='';
+  document.getElementById('vehicleReason').value='';
+  loadVehicles();
+}
+
+async function loadPeople(){
+  const users = await getDataFromKV('users');
+  const p = users[currentUser.username].people || [];
+  const t = document.getElementById('peopleTable'); t.innerHTML='<tr><th>ID</th><th>Name</th></tr>';
+  p.forEach((person,i)=>{ const row=t.insertRow(); row.insertCell(0).innerText=i+1; row.insertCell(1).innerText=person; });
+}
+async function addPerson(){
+  const val = document.getElementById('peopleInput').value.trim(); if(!val) return;
+  const users = await getDataFromKV('users');
+  users[currentUser.username].people.push(val);
+  await saveDataToKV('users',users);
+  document.getElementById('peopleInput').value='';
+  loadPeople();
+}
+
+async function createOC(){
+  const name=document.getElementById('ocName').value.trim();
+  if(!name) return;
+  const users = await getDataFromKV('users');
+  const OC={ name, birthday:document.getElementById('ocBirthday').value, address:document.getElementById('ocAddress').value, gender:document.getElementById('ocGender').value, ethnicity:document.getElementById('ocEthnicity').value, marks:document.getElementById('ocMarks').value };
+  users[currentUser.username].OCs.push(OC);
+  await saveDataToKV('users',users);
+  alert('OC Created!');
+  document.getElementById('ocName').value=''; document.getElementById('ocBirthday').value=''; document.getElementById('ocAddress').value=''; document.getElementById('ocGender').value=''; document.getElementById('ocEthnicity').value=''; document.getElementById('ocMarks').value='';
+}
+
+loadReports(); loadVehicles(); loadPeople();
 </script>
 </body>
 </html>
