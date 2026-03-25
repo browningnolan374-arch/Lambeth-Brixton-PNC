@@ -22,6 +22,7 @@ button.addBtn:hover { background:#3a6fc0; }
 button.editBtn { background:#4caf50; color:white; }
 button.deleteBtn { background:#f44336; color:white; }
 .error { color:red; margin-top:5px; }
+.success { color:lime; margin-top:5px; }
 </style>
 </head>
 <body>
@@ -74,8 +75,9 @@ button.deleteBtn { background:#f44336; color:white; }
 <input type="text" id="ocGender" placeholder="Gender"><br>
 <input type="text" id="ocEthnicity" placeholder="Ethnicity"><br>
 <input type="text" id="ocMarks" placeholder="Distinguishing Marks"><br>
-<button class="addBtn">Create OC</button>
+<button class="addBtn" onclick="createOC()">Create OC</button>
 <p class="error" id="ocError"></p>
+<p class="success" id="ocSuccess"></p>
 </section>
 
 <!-- Call Form (Civilian only) -->
@@ -85,8 +87,9 @@ button.deleteBtn { background:#f44336; color:white; }
 <input type="text" id="callType" placeholder="Incident Type"><br>
 <input type="text" id="callLocation" placeholder="Location"><br>
 <textarea id="callDesc" placeholder="Description"></textarea><br>
-<button class="addBtn">Submit Call</button>
+<button class="addBtn" onclick="submitCall()">Submit Call</button>
 <p class="error" id="callError"></p>
+<p class="success" id="callSuccess"></p>
 </section>
 
 <!-- Call Dashboard (MET only) -->
@@ -155,7 +158,37 @@ function addPerson(){const v=document.getElementById('peopleInput').value.trim()
 function editPerson(i){const d=getData('people');const v=d[i];const n=prompt("Name:",v);if(n!==null){d[i]=n;saveData('people',d);loadPeople();}}
 function deletePerson(i){const d=getData('people');if(confirm("Delete this person?")){d.splice(i,1);saveData('people',d);loadPeople();}}
 
-// ===== INIT PAGE =====
+// ===== CREATE OC & SUBMIT CALL (Civilian) =====
+function createOC(){
+  const name=document.getElementById('ocName').value.trim();
+  const birthday=document.getElementById('ocBirthday').value;
+  const address=document.getElementById('ocAddress').value.trim();
+  const gender=document.getElementById('ocGender').value.trim();
+  const ethnicity=document.getElementById('ocEthnicity').value.trim();
+  const marks=document.getElementById('ocMarks').value.trim();
+  if(!name||!birthday){document.getElementById('ocError').innerText='Name & Birthday required'; return;}
+  const OCs=getData('OCs'); OCs.push({name,birthday,address,gender,ethnicity,marks});
+  saveData('OCs',OCs);
+  document.getElementById('ocSuccess').innerText='OC created!';
+  document.getElementById('ocError').innerText='';
+  document.getElementById('ocName').value=''; document.getElementById('ocBirthday').value=''; document.getElementById('ocAddress').value='';
+  document.getElementById('ocGender').value=''; document.getElementById('ocEthnicity').value=''; document.getElementById('ocMarks').value='';
+}
+
+function submitCall(){
+  const caller=document.getElementById('callName').value.trim();
+  const type=document.getElementById('callType').value.trim();
+  const location=document.getElementById('callLocation').value.trim();
+  const desc=document.getElementById('callDesc').value.trim();
+  if(!caller||!type){document.getElementById('callError').innerText='Caller & Type required'; return;}
+  const calls=getData('calls'); calls.push({caller,type,location,desc});
+  saveData('calls',calls);
+  document.getElementById('callSuccess').innerText='Call submitted!';
+  document.getElementById('callError').innerText='';
+  document.getElementById('callName').value=''; document.getElementById('callType').value=''; document.getElementById('callLocation').value=''; document.getElementById('callDesc').value='';
+}
+
+// ===== LOAD DASHBOARD =====
 window.onload=function(){
   loadReports(); loadVehicles(); loadPeople();
   if(currentUser.type==='MET'){
