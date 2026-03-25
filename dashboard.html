@@ -2,19 +2,20 @@
 <html>
 <head>
 <meta charset="UTF-8">
-<title>Lambeth PNC Dashboard</title>
+<title>Lambeth PNC</title>
 
 <style>
-body { margin:0; font-family:Arial; background:#121212; color:#eee; }
+body { margin:0; font-family:Arial; background:#0e0e0e; color:#eee; }
 
 header {
-  background:#0b3d91;
+  background:#184a9c;
   padding:15px;
   text-align:center;
-  font-size:24px;
+  font-size:26px;
   font-weight:bold;
 }
 
+/* NAV (MET ONLY) */
 nav {
   display:flex;
   justify-content:center;
@@ -32,10 +33,11 @@ nav button {
   border-radius:4px;
 }
 
+/* SECTIONS */
 .section { display:none; padding:20px; }
 
 h2 {
-  background:#0b3d91;
+  background:#184a9c;
   padding:10px;
   border-radius:4px;
 }
@@ -53,22 +55,42 @@ button {
   padding:8px 12px;
   cursor:pointer;
   border:none;
-  background:#0b3d91;
+  background:#184a9c;
   color:white;
   border-radius:4px;
 }
 
 button.deleteBtn {
-  background:#f44336;
+  background:#e53935;
 }
 
+/* CARD */
 .card {
   background:#1e1e1e;
-  border-left:4px solid #0b3d91;
+  border-left:4px solid #184a9c;
   padding:12px;
   margin-top:10px;
   border-radius:6px;
 }
+
+/* CIV UI */
+.civilBox {
+  background:#1b1b1b;
+  padding:15px;
+  border-radius:6px;
+  margin:20px;
+}
+
+.civilTabs {
+  display:flex;
+  gap:10px;
+  flex-wrap:wrap;
+}
+
+.civilTabs button {
+  background:#1a4dab;
+}
+
 </style>
 </head>
 
@@ -76,15 +98,16 @@ button.deleteBtn {
 
 <header>Lambeth PNC</header>
 
-<nav>
+<!-- MET NAV -->
+<nav id="metNav">
 <button onclick="showSection('lookup')">PNC Lookup</button>
 <button onclick="showSection('vehicles')">Vehicle Lookup</button>
 <button onclick="showSection('warrants')">Warrants</button>
-<button onclick="showSection('oc')">Create OC</button>
 <button onclick="logout()">Logout</button>
 </nav>
 
-<!-- PERSON LOOKUP -->
+<!-- MET SECTIONS -->
+
 <div id="lookup" class="section">
 <h2>Person Lookup</h2>
 <input id="searchName" placeholder="Enter Name">
@@ -92,7 +115,6 @@ button.deleteBtn {
 <div id="personResult"></div>
 </div>
 
-<!-- VEHICLE -->
 <div id="vehicles" class="section">
 <h2>Vehicle Lookup</h2>
 <input id="searchPlate" placeholder="Enter Plate">
@@ -100,7 +122,6 @@ button.deleteBtn {
 <div id="vehicleResult"></div>
 </div>
 
-<!-- WARRANTS -->
 <div id="warrants" class="section">
 <h2>Warrants</h2>
 
@@ -112,21 +133,45 @@ button.deleteBtn {
 <button onclick="createWarrant()">Create</button>
 </div>
 
-<!-- CIV OC -->
-<div id="oc" class="section">
-<h2>Create OC</h2>
-<input id="ocName" placeholder="Name"><br>
-<input id="ocBirthday" type="date"><br>
-<input id="ocAddress" placeholder="Address"><br>
-<input id="ocGender" placeholder="Gender"><br>
-<input id="ocMarks" placeholder="Marks"><br>
-<button onclick="createOC()">Create</button>
+<!-- CIVILIAN UI -->
+<div id="civilianUI" style="display:none;">
+
+<div class="civilBox">
+
+<div class="civilTabs">
+<button>OCs</button>
+<button>Reports</button>
+<button>Vehicles</button>
+<button>Personal Info</button>
+<button>Convictions</button>
+<button>Arrests</button>
+<button>Warnings</button>
+</div>
+
+<div style="margin-top:15px;">
+<label>Select OC:</label>
+<select id="ocSelect"></select>
+<button onclick="createOC()">Add New OC</button>
+<button onclick="logout()" style="background:#e53935;">Logout</button>
+</div>
+
+<div id="civilContent"></div>
+
+</div>
 </div>
 
 <script>
 const API = "/api/storage";
 
-window.onerror = (msg) => alert("Error: " + msg);
+let currentUser = JSON.parse(localStorage.getItem("currentUser"));
+
+if(!currentUser){
+  window.location.href = "index.html";
+}
+
+//////////////////////////////////////////////////
+// STORAGE
+//////////////////////////////////////////////////
 
 async function getData(key){
   const res = await fetch(API + "?key=" + key);
@@ -142,11 +187,26 @@ async function saveData(key, value){
   });
 }
 
-let currentUser = JSON.parse(localStorage.getItem("currentUser"));
+//////////////////////////////////////////////////
+// INIT (FIXES BUTTONS)
+//////////////////////////////////////////////////
 
-if(!currentUser){
-  window.location.href = "index.html";
-}
+document.addEventListener("DOMContentLoaded", () => {
+
+  if(currentUser.type === "Civilian"){
+    document.getElementById("metNav").style.display = "none";
+    document.getElementById("civilianUI").style.display = "block";
+    loadCivilianOCs();
+  } else {
+    showSection("lookup");
+    loadWarrants();
+  }
+
+});
+
+//////////////////////////////////////////////////
+// NAV
+//////////////////////////////////////////////////
 
 function showSection(id){
   document.querySelectorAll(".section").forEach(s=>s.style.display="none");
@@ -185,7 +245,7 @@ async function searchPerson(){
       <p>DOB: ${o.birthday}</p>
       <p>Address: ${o.address}</p>
       <p>Marks: ${o.marks}</p>
-      ${currentUser.type==="MET" ? `<button onclick="quickWarrant('${o.name}')">Add Warrant</button>` : ""}
+      <button onclick="quickWarrant('${o.name}')">Add Warrant</button>
     </div>`;
   });
 }
@@ -226,7 +286,7 @@ async function searchVehicle(){
 }
 
 //////////////////////////////////////////////////
-// WARRANT SYSTEM
+// WARRANTS
 //////////////////////////////////////////////////
 
 async function createWarrant(){
@@ -234,12 +294,11 @@ async function createWarrant(){
   const reason = document.getElementById("warrantReason").value;
 
   if(!name || !reason){
-    alert("Fill in all fields");
+    alert("Fill fields");
     return;
   }
 
   let warrants = await getData("warrants");
-
   if(!Array.isArray(warrants)) warrants = [];
 
   warrants.push({
@@ -250,8 +309,6 @@ async function createWarrant(){
   });
 
   await saveData("warrants", warrants);
-
-  alert("Warrant created ✅");
   loadWarrants();
 }
 
@@ -261,75 +318,85 @@ function quickWarrant(name){
 }
 
 async function loadWarrants(){
-  const list = document.getElementById("warrantList");
   let warrants = await getData("warrants");
-
   if(!Array.isArray(warrants)) warrants = [];
 
+  const list = document.getElementById("warrantList");
   list.innerHTML = "";
 
-  warrants.forEach((w, i)=>{
+  warrants.forEach((w,i)=>{
     list.innerHTML += `
     <div class="card">
       <h3>${w.name}</h3>
-      <p>Reason: ${w.reason}</p>
-      <p>Officer: ${w.officer}</p>
-      <p>Date: ${w.date}</p>
-      ${currentUser.type==="MET" ? `<button class="deleteBtn" onclick="deleteWarrant(${i})">Delete</button>` : ""}
+      <p>${w.reason}</p>
+      <p>${w.officer}</p>
+      <p>${w.date}</p>
+      <button class="deleteBtn" onclick="deleteWarrant(${i})">Delete</button>
     </div>`;
   });
 }
 
-async function deleteWarrant(index){
+async function deleteWarrant(i){
   let warrants = await getData("warrants");
-
   if(!Array.isArray(warrants)) return;
 
-  if(!confirm("Delete this warrant?")) return;
-
-  warrants.splice(index, 1);
-
+  warrants.splice(i,1);
   await saveData("warrants", warrants);
 
   loadWarrants();
 }
 
 //////////////////////////////////////////////////
-// OC CREATION
+// CIVILIAN
 //////////////////////////////////////////////////
+
+async function loadCivilianOCs(){
+  let OCs = await getData("OCs");
+  if(!Array.isArray(OCs)) OCs = [];
+
+  const select = document.getElementById("ocSelect");
+  select.innerHTML = "";
+
+  const mine = OCs.filter(o=>o.createdBy===currentUser.username);
+
+  mine.forEach((o,i)=>{
+    select.innerHTML += `<option value="${i}">${o.name}</option>`;
+  });
+
+  select.onchange = () => showCivilOC(mine[select.value]);
+
+  if(mine.length) showCivilOC(mine[0]);
+}
+
+function showCivilOC(oc){
+  document.getElementById("civilContent").innerHTML = `
+  <div class="card">
+    <h3>${oc.name}</h3>
+    <p>DOB: ${oc.birthday}</p>
+    <p>Address: ${oc.address}</p>
+    <p>Gender: ${oc.gender}</p>
+    <p>Marks: ${oc.marks}</p>
+  </div>`;
+}
 
 async function createOC(){
   let OCs = await getData("OCs");
-
   if(!Array.isArray(OCs)) OCs = [];
 
+  const name = prompt("Name?");
+  if(!name) return;
+
   OCs.push({
-    name: ocName.value,
-    birthday: ocBirthday.value,
-    address: ocAddress.value,
-    gender: ocGender.value,
-    marks: ocMarks.value,
+    name,
+    birthday:"N/A",
+    address:"N/A",
+    gender:"N/A",
+    marks:"None",
     createdBy: currentUser.username
   });
 
   await saveData("OCs", OCs);
-
-  alert("OC Created ✅");
-}
-
-//////////////////////////////////////////////////
-// ROLE CONTROL
-//////////////////////////////////////////////////
-
-if(currentUser.type === "Civilian"){
-  document.getElementById("lookup").style.display = "none";
-  document.getElementById("vehicles").style.display = "none";
-  document.getElementById("warrants").style.display = "none";
-  showSection("oc");
-} else {
-  document.getElementById("oc").style.display = "none";
-  showSection("lookup");
-  loadWarrants();
+  loadCivilianOCs();
 }
 </script>
 
