@@ -4,85 +4,103 @@
 <meta charset="UTF-8">
 <title>Lambeth PNC Dashboard</title>
 <style>
+/* ===== GENERAL STYLES ===== */
 body { margin:0; font-family: Arial, sans-serif; background:#121212; color:#eee; }
 header { background:#0b3d91; color:white; padding:15px; text-align:center; font-size:28px; font-weight:bold; border-bottom:2px solid #0055a5; }
-.tabs, nav { display:flex; justify-content:center; background:#0a2c70; gap:10px; flex-wrap:wrap; }
-.tabs button, nav button { background:#1a4dab; color:white; border:none; padding:10px 15px; border-radius:4px; cursor:pointer; font-weight:bold; }
-.tabs button.active, nav button:hover { background:#3a6fc0; }
-.container, .panel { max-width:400px; margin:20px auto; background:#1e1e1e; padding:20px; border-radius:6px; box-shadow:0 2px 5px rgba(0,0,0,0.5); }
-input, select, textarea { width:100%; padding:8px; margin:5px 0; border-radius:3px; border:none; background:#2b2b2b; color:#eee; }
-textarea { height:60px; }
-button.submitBtn, button.addBtn, button.editBtn, button.deleteBtn { cursor:pointer; border-radius:4px; font-weight:bold; border:none; }
-button.submitBtn, button.addBtn { width:100%; padding:10px; background:#0b3d91; color:white; margin-top:10px; }
-button.submitBtn:hover, button.addBtn:hover { background:#3a6fc0; }
-button.editBtn { background:#4caf50; color:white; padding:5px 8px; margin-right:3px; }
-button.deleteBtn { background:#f44336; color:white; padding:5px 8px; }
+button { cursor:pointer; }
+.section { display:none; }
+
+/* ===== LOGIN / REGISTER STYLES ===== */
+.tabs { display:flex; justify-content:center; background:#0a2c70; }
+.tabs button { flex:1; padding:12px; background:#1a4dab; border:none; color:white; font-weight:bold; font-size:16px; }
+.tabs button.active { background:#3a6fc0; }
+.container { max-width:400px; margin:30px auto; background:#1e1e1e; padding:20px; border-radius:6px; box-shadow:0 2px 5px rgba(0,0,0,0.5); }
+.container h2 { text-align:center; margin-top:0; }
+input { width:100%; padding:8px; margin:5px 0; border-radius:3px; border:none; background:#2b2b2b; color:#eee; }
+button.addBtn { width:100%; padding:10px; background:#0b3d91; border:none; color:white; font-weight:bold; border-radius:4px; margin-top:10px; }
+button.addBtn:hover { background:#3a6fc0; }
 .error { color:red; text-align:center; margin-top:5px; }
 .success { color:green; text-align:center; margin-top:5px; }
-.section { display:none; }
+
+/* ===== DASHBOARD STYLES ===== */
+nav { display:flex; justify-content:center; background:#0a2c70; padding:10px; gap:10px; flex-wrap:wrap;}
+nav button { background:#1a4dab; color:white; border:none; padding:8px 15px; border-radius:4px; cursor:pointer; font-weight:bold; }
+nav button:hover { background:#3a6fc0; }
+main { padding:20px; max-width:1000px; margin:auto; }
+.panel { background:#1e1e1e; padding:10px; border-radius:4px; margin-bottom:15px; box-shadow:0 2px 4px rgba(0,0,0,0.5); }
 table { width:100%; border-collapse:collapse; margin-bottom:10px; }
 th, td { padding:8px; text-align:left; border-bottom:1px solid #333; }
 th { background:#0b3d91; }
+input, select, textarea { padding:5px; margin-right:5px; margin-top:5px; border-radius:3px; border:none; background:#2b2b2b; color:#eee; width:200px; }
+textarea { width:95%; height:60px; }
+button.editBtn, button.deleteBtn { padding:3px 6px; margin-right:3px; cursor:pointer; border-radius:3px; border:none; }
+button.editBtn { background:#4caf50; color:white; }
+button.deleteBtn { background:#f44336; color:white; }
 </style>
 </head>
 <body>
 
 <header>Lambeth PNC Dashboard</header>
 
-<!-- LOGIN PAGE -->
-<div id="loginPage" class="container">
+<!-- ===== LOGIN PAGE ===== -->
+<main id="loginPage">
+    <h2 style="text-align:center;">Lambeth PNC Login</h2>
     <div class="tabs">
         <button id="tabMET" class="active" onclick="showLoginForm('MET')">MET Login</button>
         <button id="tabCivil" onclick="showLoginForm('Civilian')">Civilian Login</button>
     </div>
 
-    <div id="loginMETForm">
-        <h2>MET Login</h2>
+    <div id="loginMETForm" class="container">
         <input type="text" id="loginMETUsername" placeholder="Username">
         <input type="password" id="loginMETPassword" placeholder="Password">
         <input type="text" id="loginCollar" placeholder="Collar Number">
-        <button class="submitBtn" onclick="loginMET()">Login</button>
+        <button class="addBtn" onclick="loginMET()">Login</button>
         <p class="error" id="loginMETError"></p>
     </div>
 
-    <div id="loginCivilForm" style="display:none;">
-        <h2>Civilian Login</h2>
+    <div id="loginCivilForm" class="container">
         <input type="text" id="loginCivilUsername" placeholder="Username">
         <input type="password" id="loginCivilPassword" placeholder="Password">
-        <button class="submitBtn" onclick="loginCivil()">Login</button>
+        <button class="addBtn" onclick="loginCivil()">Login</button>
         <p class="error" id="loginCivilError"></p>
     </div>
 
-    <p style="text-align:center; margin-top:10px;">No account? <a href="#" onclick="showRegister()">Register</a></p>
-</div>
+    <div style="text-align:center; margin-top:15px;">
+        <button onclick="showRegisterPage()">Register</button>
+    </div>
+</main>
 
-<!-- REGISTER PAGE -->
-<div id="registerPage" class="container section">
+<!-- ===== REGISTER PAGE ===== -->
+<main id="registerPage" class="section container">
     <h2>Register</h2>
-    <div id="regMET" style="display:none;">
+
+    <div id="regMET">
         <h3>MET Registration</h3>
         <input type="text" id="regMETUsername" placeholder="Username">
         <input type="password" id="regMETPassword" placeholder="Password">
         <input type="text" id="regMETCollar" placeholder="Collar Number">
-        <button class="submitBtn" onclick="registerMET()">Create MET Account</button>
+        <button class="addBtn" onclick="registerMET()">Create MET Account</button>
     </div>
-    <div id="regCivil" style="display:none;">
+
+    <div id="regCivil">
         <h3>Civilian Registration</h3>
         <input type="text" id="regCivilUsername" placeholder="Username">
         <input type="password" id="regCivilPassword" placeholder="Password">
-        <button class="submitBtn" onclick="registerCivil()">Create Civilian Account</button>
+        <button class="addBtn" onclick="registerCivil()">Create Civilian Account</button>
     </div>
+
     <div style="margin-top:10px; text-align:center;">
         <button onclick="showRegMET()">Register as MET</button>
         <button onclick="showRegCivil()">Register as Civilian</button>
         <button onclick="showLogin()">Back to Login</button>
     </div>
+
     <p class="error" id="regError"></p>
     <p class="success" id="regSuccess"></p>
-</div>
+</main>
 
-<!-- DASHBOARD -->
-<div id="dashboardPage" class="section">
+<!-- ===== DASHBOARD ===== -->
+<main id="dashboardPage" class="section">
     <nav>
         <button onclick="showSection('reports')">Reports</button>
         <button onclick="showSection('vehicles')">Vehicles</button>
@@ -94,102 +112,88 @@ th { background:#0b3d91; }
     </nav>
 
     <!-- Reports -->
-    <div id="reports" class="section panel">
+    <section id="reports" class="section panel">
         <h2>Reports</h2>
         <table id="reportsTable"><tr><th>ID</th><th>Description</th><th>Actions</th></tr></table>
         <input type="text" id="reportInput" placeholder="Report description">
         <button class="addBtn" onclick="addReport()">Add Report</button>
-    </div>
+    </section>
 
     <!-- Vehicles -->
-    <div id="vehicles" class="section panel">
+    <section id="vehicles" class="section panel">
         <h2>Vehicles</h2>
         <table id="vehiclesTable"><tr><th>ID</th><th>Colour</th><th>Plate</th><th>Brand</th><th>Actions</th></tr></table>
         <input type="text" id="vehicleColour" placeholder="Colour">
         <input type="text" id="vehiclePlate" placeholder="Plate">
         <input type="text" id="vehicleBrand" placeholder="Brand">
         <button class="addBtn" onclick="addVehicle()">Add Vehicle</button>
-    </div>
+    </section>
 
     <!-- People -->
-    <div id="people" class="section panel">
+    <section id="people" class="section panel">
         <h2>People</h2>
         <table id="peopleTable"><tr><th>ID</th><th>Name</th><th>Actions</th></tr></table>
         <input type="text" id="peopleInput" placeholder="Person name">
         <button class="addBtn" onclick="addPerson()">Add Person</button>
-    </div>
+    </section>
 
     <!-- OC Form (Civilian Only) -->
-    <div id="ocForm" class="section panel">
+    <section id="ocForm" class="section panel">
         <h2>Create OC</h2>
-        <input type="text" id="ocName" placeholder="RP Name">
-        <input type="date" id="ocBirthday">
-        <input type="text" id="ocAddress" placeholder="RP Address">
-        <input type="text" id="ocGender" placeholder="Gender">
-        <input type="text" id="ocEthnicity" placeholder="Ethnicity">
-        <input type="text" id="ocMarks" placeholder="Distinguishing Marks">
+        <input type="text" id="ocName" placeholder="RP Name"><br>
+        <input type="date" id="ocBirthday"><br>
+        <input type="text" id="ocAddress" placeholder="RP Address"><br>
+        <input type="text" id="ocGender" placeholder="Gender"><br>
+        <input type="text" id="ocEthnicity" placeholder="Ethnicity"><br>
+        <input type="text" id="ocMarks" placeholder="Distinguishing Marks"><br>
         <button class="addBtn" onclick="createOC()">Create OC</button>
         <p class="error" id="ocError"></p>
-    </div>
+    </section>
 
     <!-- Call Form (Civilian Only) -->
-    <div id="callForm" class="section panel">
+    <section id="callForm" class="section panel">
         <h2>Submit a Call</h2>
-        <input type="text" id="callName" placeholder="Caller Name">
-        <input type="text" id="callType" placeholder="Incident Type">
-        <input type="text" id="callLocation" placeholder="Location">
-        <textarea id="callDesc" placeholder="Description"></textarea>
+        <input type="text" id="callName" placeholder="Caller Name"><br>
+        <input type="text" id="callType" placeholder="Incident Type"><br>
+        <input type="text" id="callLocation" placeholder="Location"><br>
+        <textarea id="callDesc" placeholder="Description"></textarea><br>
         <button class="addBtn" onclick="submitCall()">Submit Call</button>
         <p class="error" id="callError"></p>
-    </div>
+    </section>
 
     <!-- Call Dashboard (MET Only) -->
-    <div id="callDashboard" class="section panel">
+    <section id="callDashboard" class="section panel">
         <h2>Incoming Calls</h2>
         <div id="callsList"></div>
-    </div>
-</div>
+    </section>
+</main>
 
 <script>
-// ===== STORAGE & CURRENT USER =====
+// ===== STORAGE =====
 function getUsers(){return JSON.parse(localStorage.getItem('users'))||{}}
 function saveUsers(users){localStorage.setItem('users',JSON.stringify(users))}
 let currentUser = localStorage.getItem('currentUser') ? JSON.parse(localStorage.getItem('currentUser')) : null;
 
-// ===== LOGIN TABS =====
+// ===== PAGE LOAD =====
+window.onload=function(){
+    if(currentUser) openDashboard();
+    else showLogin();
+    showLoginForm('MET');
+}
+
+// ===== LOGIN TAB =====
 function showLoginForm(role){
     document.getElementById('loginMETForm').style.display = role==='MET'?'block':'none';
     document.getElementById('loginCivilForm').style.display = role==='Civilian'?'block':'none';
-    document.getElementById('tabMET').classList.toggle('active', role==='MET');
-    document.getElementById('tabCivil').classList.toggle('active', role==='Civilian');
+    document.getElementById('tabMET').classList.toggle('active',role==='MET');
+    document.getElementById('tabCivil').classList.toggle('active',role==='Civilian');
 }
 
-// ===== REGISTER =====
-function showRegister(){ document.getElementById('loginPage').classList.add('section'); document.getElementById('registerPage').classList.remove('section'); showRegMET(); }
+// ===== REGISTER PAGE =====
+function showRegisterPage(){document.getElementById('registerPage').classList.remove('section'); document.getElementById('loginPage').classList.add('section');}
 function showRegMET(){document.getElementById('regMET').style.display='block'; document.getElementById('regCivil').style.display='none';}
 function showRegCivil(){document.getElementById('regMET').style.display='none'; document.getElementById('regCivil').style.display='block';}
-function showLogin(){ document.getElementById('registerPage').classList.add('section'); document.getElementById('loginPage').classList.remove('section'); }
-
-// ===== REGISTER USERS =====
-function registerMET(){
-    const u=document.getElementById('regMETUsername').value.trim();
-    const p=document.getElementById('regMETPassword').value;
-    const c=document.getElementById('regMETCollar').value.trim();
-    const users=getUsers();
-    if(!u||!p||!c){document.getElementById('regError').innerText='All fields required'; return;}
-    if(users[u]){document.getElementById('regError').innerText='Username exists'; return;}
-    users[u]={password:p,type:'MET',collar:c,reports:[],vehicles:[],people:[],OCs:[],calls:[]};
-    saveUsers(users); document.getElementById('regSuccess').innerText='MET account created! Login now.';
-}
-function registerCivil(){
-    const u=document.getElementById('regCivilUsername').value.trim();
-    const p=document.getElementById('regCivilPassword').value;
-    const users=getUsers();
-    if(!u||!p){document.getElementById('regError').innerText='All fields required'; return;}
-    if(users[u]){document.getElementById('regError').innerText='Username exists'; return;}
-    users[u]={password:p,type:'Civilian',reports:[],vehicles:[],people:[],OCs:[],calls:[]};
-    saveUsers(users); document.getElementById('regSuccess').innerText='Civilian account created! Login now.';
-}
+function showLogin(){document.getElementById('loginPage').classList.remove('section'); document.getElementById('registerPage').classList.add('section'); document.getElementById('dashboardPage').classList.add('section');}
 
 // ===== LOGIN =====
 function loginMET(){
@@ -197,18 +201,49 @@ function loginMET(){
     const p=document.getElementById('loginMETPassword').value;
     const c=document.getElementById('loginCollar').value.trim();
     const users=getUsers();
-    if(users[u] && users[u].password===p && users[u].type==='MET'){
-        if(users[u].collar!==c){document.getElementById('loginMETError').innerText='Invalid collar number'; return;}
-        currentUser={username:u,type:'MET'}; localStorage.setItem('currentUser',JSON.stringify(currentUser)); openDashboard();
-    } else {document.getElementById('loginMETError').innerText='Invalid credentials';}
+    const err=document.getElementById('loginMETError'); err.innerText='';
+    if(!users[u]){err.innerText='Username does not exist'; return;}
+    const user=users[u];
+    if(user.type!=='MET'){err.innerText='Not a MET account'; return;}
+    if(user.password!==p){err.innerText='Incorrect password'; return;}
+    if(user.collar!==c){err.innerText='Invalid collar number'; return;}
+    currentUser={username:u,type:'MET'}; localStorage.setItem('currentUser',JSON.stringify(currentUser)); openDashboard();
 }
+
 function loginCivil(){
     const u=document.getElementById('loginCivilUsername').value.trim();
     const p=document.getElementById('loginCivilPassword').value;
     const users=getUsers();
-    if(users[u] && users[u].password===p && users[u].type==='Civilian'){
-        currentUser={username:u,type:'Civilian'}; localStorage.setItem('currentUser',JSON.stringify(currentUser)); openDashboard();
-    } else {document.getElementById('loginCivilError').innerText='Invalid credentials';}
+    const err=document.getElementById('loginCivilError'); err.innerText='';
+    if(!users[u]){err.innerText='Username does not exist'; return;}
+    const user=users[u];
+    if(user.type!=='Civilian'){err.innerText='Not a Civilian account'; return;}
+    if(user.password!==p){err.innerText='Incorrect password'; return;}
+    currentUser={username:u,type:'Civilian'}; localStorage.setItem('currentUser',JSON.stringify(currentUser)); openDashboard();
+}
+
+// ===== REGISTER =====
+function registerMET(){
+    const u=document.getElementById('regMETUsername').value.trim();
+    const p=document.getElementById('regMETPassword').value;
+    const c=document.getElementById('regMETCollar').value.trim();
+    const users=getUsers();
+    const err=document.getElementById('regError'); const success=document.getElementById('regSuccess'); err.innerText=''; success.innerText='';
+    if(!u||!p||!c){err.innerText='All fields required'; return;}
+    if(users[u]){err.innerText='Username exists'; return;}
+    users[u]={password:p,type:'MET',collar:c,reports:[],vehicles:[],people:[],OCs:[],calls:[]};
+    saveUsers(users); success.innerText='MET account created! Login now.';
+}
+
+function registerCivil(){
+    const u=document.getElementById('regCivilUsername').value.trim();
+    const p=document.getElementById('regCivilPassword').value;
+    const users=getUsers();
+    const err=document.getElementById('regError'); const success=document.getElementById('regSuccess'); err.innerText=''; success.innerText='';
+    if(!u||!p){err.innerText='All fields required'; return;}
+    if(users[u]){err.innerText='Username exists'; return;}
+    users[u]={password:p,type:'Civilian',reports:[],vehicles:[],people:[],OCs:[],calls:[]};
+    saveUsers(users); success.innerText='Civilian account created! Login now.';
 }
 
 // ===== DASHBOARD =====
@@ -216,7 +251,7 @@ function openDashboard(){
     document.getElementById('loginPage').classList.add('section');
     document.getElementById('registerPage').classList.add('section');
     document.getElementById('dashboardPage').classList.remove('section');
-
+    if(!currentUser) return;
     if(currentUser.type==='Civilian'){
         document.getElementById('ocForm').style.display='block';
         document.getElementById('callForm').style.display='block';
@@ -225,35 +260,27 @@ function openDashboard(){
         document.getElementById('ocForm').style.display='none';
         document.getElementById('callForm').style.display='none';
         document.getElementById('callDashboard').style.display='block';
-        loadCalls();
     }
-
     loadAllTables();
     showSection(currentUser.type==='Civilian'?'ocForm':'reports');
 }
 
 function logout(){currentUser=null; localStorage.removeItem('currentUser'); showLogin();}
 
-// ===== UTILITIES =====
+// ===== DATA UTILITIES =====
 function getData(type){const users=getUsers();return currentUser&&users[currentUser.username]?users[currentUser.username][type]:[];}
 function saveData(type,data){const users=getUsers();if(currentUser){users[currentUser.username][type]=data; saveUsers(users);}}
 
-// ===== SECTIONS =====
-function showSection(name){document.querySelectorAll('.section.panel').forEach(s=>s.style.display='none'); document.getElementById(name).style.display='block';}
+// ===== DASHBOARD SECTIONS =====
+function showSection(name){document.querySelectorAll('.section.panel').forEach(s=>s.style.display='none');document.getElementById(name).style.display='block';}
+function loadAllTables(){ if(currentUser.type==='MET'){loadReports();loadVehicles();loadPeople();loadCalls();} else {loadReports();loadVehicles();loadPeople();} }
 
-// ===== CRUD =====
-// Reports
-function loadReports(){const r=getData('reports');const t=document.getElementById('reportsTable');t.innerHTML='<tr><th>ID</th><th>Description</th><th>Actions</th></tr>'; r.forEach((v,i)=>{const row=t.insertRow(); row.insertCell(0).innerText=i+1; row.insertCell(1).innerText=v; row.insertCell(2).innerHTML=`<button class="editBtn" onclick="editReport(${i})">Edit</button> <button class="deleteBtn" onclick="deleteReport(${i})">Delete</button>`;});}
-function addReport(){const v=document.getElementById('reportInput').value;if(!v)return; const d=getData('reports'); d.push(v); saveData('reports',d); document.getElementById('reportInput').value=''; loadReports();}
-function editReport(i){const d=getData('reports'); const v=prompt("Edit report:",d[i]); if(v!==null){d[i]=v; saveData('reports',d); loadReports();}}
-function deleteReport(i){const d=getData('reports'); if(confirm("Delete this report?")){d.splice(i,1); saveData('reports',d); loadReports();}}
+// ===== CRUD: Reports =====
+function loadReports(){const r=getData('reports');const t=document.getElementById('reportsTable');t.innerHTML='<tr><th>ID</th><th>Description</th><th>Actions</th></tr>';r.forEach((v,i)=>{const row=t.insertRow();row.insertCell(0).innerText=i+1;row.insertCell(1).innerText=v;row.insertCell(2).innerHTML=`<button class="editBtn" onclick="editReport(${i})">Edit</button> <button class="deleteBtn" onclick="deleteReport(${i})">Delete</button>`;});}
+function addReport(){const v=document.getElementById('reportInput').value;if(!v)return;const d=getData('reports');d.push(v);saveData('reports',d);document.getElementById('reportInput').value='';loadReports();}
+function editReport(i){const d=getData('reports');const v=prompt("Edit report:",d[i]);if(v!==null){d[i]=v;saveData('reports',d);loadReports();}}
+function deleteReport(i){const d=getData('reports');if(confirm("Delete this report?")){d.splice(i,1);saveData('reports',d);loadReports();}}
 
-// Vehicles
-function loadVehicles(){const r=getData('vehicles'); const t=document.getElementById('vehiclesTable'); t.innerHTML='<tr><th>ID</th><th>Colour</th><th>Plate</th><th>Brand</th><th>Actions</th></tr>'; r.forEach((v,i)=>{ const row=t.insertRow(); row.insertCell(0).innerText=i+1; row.insertCell(1).innerText=v.colour; row.insertCell(2).innerText=v.plate; row.insertCell(3).innerText=v.brand; row.insertCell(4).innerHTML=`<button class="editBtn" onclick="editVehicle(${i})">Edit</button> <button class="deleteBtn" onclick="deleteVehicle(${i})">Delete</button>`;});}
-function addVehicle(){const c=document.getElementById('vehicleColour').value.trim(),p=document.getElementById('vehiclePlate').value.trim(),b=document.getElementById('vehicleBrand').value.trim(); if(!c||!p||!b)return; const d=getData('vehicles'); d.push({colour:c,plate:p,brand:b}); saveData('vehicles',d); document.getElementById('vehicleColour').value=''; document.getElementById('vehiclePlate').value=''; document.getElementById('vehicleBrand').value=''; loadVehicles();}
-function editVehicle(i){const d=getData('vehicles'); const v=d[i]; const c=prompt("Colour:",v.colour),p=prompt("Plate:",v.plate),b=prompt("Brand:",v.brand); if(c!==null&&p!==null&&b!==null){d[i]={colour:c,plate:p,brand:b}; saveData('vehicles',d); loadVehicles();}}
-function deleteVehicle(i){const d=getData('vehicles'); if(confirm("Delete this vehicle?")){d.splice(i,1); saveData('vehicles',d); loadVehicles();}}
-
-// People
-function loadPeople(){const r=getData('people'); const t=document.getElementById('peopleTable'); t.innerHTML='<tr><th>ID</th><th>Name</th><th>Actions</th></tr>'; r.forEach((v,i)=>{ const row=t.insertRow(); row.insertCell(0).innerText=i+1; row.insertCell(1).innerText=v; row.insertCell(2).innerHTML=`<button class="editBtn" onclick="editPerson(${i})">Edit</button> <button class="deleteBtn" onclick="deletePerson(${i})">Delete</button>`;});}
-function addPerson(){const v=document.getElementById('peopleInput
+// ===== CRUD: Vehicles =====
+function loadVehicles(){const r=getData('vehicles');const t=document.getElementById('vehiclesTable');t.innerHTML='<tr><th>ID</th><th>Colour</th><th>Plate</th><th>Brand</th><th>Actions</th></tr>';r.forEach((v,i)=>{const row=t.insertRow();row.insertCell(0).innerText=i+1;row.insertCell(1).innerText=v.colour;row.insertCell(2).innerText=v.plate;row.insertCell(3).innerText=v.brand;row.insertCell(4).innerHTML=`<button class="editBtn" onclick="editVehicle(${i})">Edit</button> <button class="deleteBtn" onclick="deleteVehicle(${i})">Delete</button>`;});}
+function addVehicle(){const c=document.getElementById('vehicleColour
