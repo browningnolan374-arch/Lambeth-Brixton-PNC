@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Civilian PNC</title>
+
+<style>
+body { background:#0e0e0e; color:#eee; font-family:Arial; }
+header { background:#184a9c; padding:15px; text-align:center; font-size:24px; }
+
+.box { background:#1e1e1e; padding:15px; margin:20px; border-radius:6px; }
+
+.card { background:#2a2a2a; padding:10px; margin-top:10px; border-left:4px solid #184a9c; }
+
+button { background:#184a9c; border:none; padding:8px; color:white; border-radius:4px; }
+</style>
+</head>
+
+<body>
+
+<header>Lambeth PNC</header>
+
+<div class="box">
+
+<select id="ocSelect"></select>
+<button onclick="showForm()">Add OC</button>
+<button onclick="logout()">Logout</button>
+
+<div id="content"></div>
+
+<div id="form" style="display:none;">
+<input id="name" placeholder="Name"><br>
+<input id="dob" type="date"><br>
+<input id="addr" placeholder="Address"><br>
+<input id="gen" placeholder="Gender"><br>
+<input id="marks" placeholder="Marks"><br>
+<button onclick="create()">Create</button>
+</div>
+
+</div>
+
+<script>
+const API="/api/storage";
+
+let user = JSON.parse(localStorage.getItem("currentUser"));
+if(!user || user.type!=="Civilian") location.href="index.html";
+
+function logout(){
+  localStorage.removeItem("currentUser");
+  location.href="index.html";
+}
+
+async function getData(k){
+  const r = await fetch(API+"?key="+k);
+  const d = await r.json();
+  return d.value||[];
+}
+
+async function saveData(k,v){
+  await fetch(API,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({key:k,value:v})});
+}
+
+async function load(){
+  let OCs = await getData("OCs");
+  let mine = OCs.filter(o=>o.createdBy===user.username);
+
+  ocSelect.innerHTML="";
+  mine.forEach((o,i)=>{
+    ocSelect.innerHTML+=`<option value="${i}">${o.name}</option>`;
+  });
+
+  if(mine.length) show(mine[0]);
+}
+
+function show(o){
+  content.innerHTML=`
+  <div class="card">
+  ${o.name}<br>
+  ${o.address}<br>
+  ${o.birthday}
+  </div>`;
+}
+
+function showForm(){
+  form.style.display="block";
+}
+
+async function create(){
+  let OCs = await getData("OCs");
+
+  OCs.push({
+    name:name.value,
+    birthday:dob.value,
+    address:addr.value,
+    gender:gen.value,
+    marks:marks.value,
+    createdBy:user.username
+  });
+
+  await saveData("OCs",OCs);
+  form.style.display="none";
+  load();
+}
+
+load();
+</script>
+
+</body>
+</html>
