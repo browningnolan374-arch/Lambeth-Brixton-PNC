@@ -122,10 +122,13 @@ button {
 <script>
 const API = "/api/storage";
 
+// DEBUG (helps catch errors)
+window.onerror = (msg) => alert("Error: " + msg);
+
 async function getData(key){
   const res = await fetch(API + "?key=" + key);
   const data = await res.json();
-  return data.value || {};
+  return data.value ?? null;
 }
 
 async function saveData(key, value){
@@ -139,7 +142,7 @@ async function saveData(key, value){
 let currentUser = JSON.parse(localStorage.getItem("currentUser"));
 
 if(!currentUser){
-  window.location.href = "/";
+  window.location.href = "index.html";
 }
 
 function showSection(id){
@@ -149,7 +152,7 @@ function showSection(id){
 
 function logout(){
   localStorage.removeItem("currentUser");
-  window.location.href = "/";
+  window.location.href = "index.html";
 }
 
 //////////////////////////////////////////////////
@@ -158,7 +161,9 @@ function logout(){
 
 async function searchPerson(){
   const name = document.getElementById("searchName").value.toLowerCase();
-  const OCs = await getData("OCs");
+  let OCs = await getData("OCs");
+
+  if(!Array.isArray(OCs)) OCs = [];
 
   const box = document.getElementById("personResult");
   box.innerHTML = "";
@@ -188,7 +193,9 @@ async function searchPerson(){
 
 async function searchVehicle(){
   const plate = document.getElementById("searchPlate").value.toLowerCase();
-  const users = await getData("users");
+  let users = await getData("users");
+
+  if(!users) users = {};
 
   let found = null;
 
@@ -223,9 +230,14 @@ async function createWarrant(){
   const name = document.getElementById("warrantName").value;
   const reason = document.getElementById("warrantReason").value;
 
-  if(!name || !reason) return;
+  if(!name || !reason){
+    alert("Fill in all fields");
+    return;
+  }
 
-  const warrants = await getData("warrants") || [];
+  let warrants = await getData("warrants");
+
+  if(!Array.isArray(warrants)) warrants = [];
 
   warrants.push({
     name,
@@ -235,6 +247,8 @@ async function createWarrant(){
   });
 
   await saveData("warrants", warrants);
+
+  alert("Warrant created ✅");
   loadWarrants();
 }
 
@@ -245,7 +259,9 @@ function quickWarrant(name){
 
 async function loadWarrants(){
   const list = document.getElementById("warrantList");
-  const warrants = await getData("warrants") || [];
+  let warrants = await getData("warrants");
+
+  if(!Array.isArray(warrants)) warrants = [];
 
   list.innerHTML = "";
 
@@ -265,7 +281,9 @@ async function loadWarrants(){
 //////////////////////////////////////////////////
 
 async function createOC(){
-  const OCs = await getData("OCs") || [];
+  let OCs = await getData("OCs");
+
+  if(!Array.isArray(OCs)) OCs = [];
 
   OCs.push({
     name: ocName.value,
@@ -277,7 +295,8 @@ async function createOC(){
   });
 
   await saveData("OCs", OCs);
-  alert("OC Created");
+
+  alert("OC Created ✅");
 }
 
 //////////////////////////////////////////////////
