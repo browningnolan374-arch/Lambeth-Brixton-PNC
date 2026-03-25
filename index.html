@@ -1,95 +1,127 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
 <meta charset="UTF-8">
 <title>Lambeth PNC Login</title>
-
 <style>
-body { margin:0; font-family:Arial; background:#121212; color:#eee; }
-header { background:#0b3d91; padding:15px; text-align:center; font-size:24px; }
-.container { max-width:400px; margin:40px auto; background:#1e1e1e; padding:20px; border-radius:6px; }
-
-input {
-  width:100%;
-  padding:8px;
-  margin:5px 0;
-  background:#2b2b2b;
-  border:none;
-  color:white;
-}
-
-button {
-  width:100%;
-  padding:10px;
-  background:#0b3d91;
-  border:none;
-  color:white;
-  cursor:pointer;
-}
-
-.error { color:red; text-align:center; }
+body { font-family: Arial, sans-serif; background:#121212; color:#eee; margin:0; padding:0; }
+header { background:#0b3d91; color:white; padding:15px; text-align:center; font-size:28px; font-weight:bold; }
+.container { max-width:400px; margin:30px auto; background:#1e1e1e; padding:20px; border-radius:6px; }
+input { width:100%; padding:8px; margin:5px 0; border-radius:3px; border:none; background:#2b2b2b; color:#eee; }
+button { width:100%; padding:10px; background:#0b3d91; border:none; color:white; font-weight:bold; border-radius:4px; cursor:pointer; margin-top:10px; }
+button:hover { background:#3a6fc0; }
+.error { color:red; text-align:center; margin-top:5px; }
+.success { color:green; text-align:center; margin-top:5px; }
+.tabs { display:flex; justify-content:center; margin-bottom:10px; }
+.tabs button { flex:1; padding:12px; background:#1a4dab; border:none; color:white; font-weight:bold; font-size:16px; cursor:pointer; }
+.tabs button.active { background:#3a6fc0; }
 </style>
 </head>
-
 <body>
 
 <header>Lambeth PNC Login</header>
 
+<div class="tabs">
+  <button id="tabMET" class="active" onclick="showLoginForm('MET')">MET Login</button>
+  <button id="tabCivil" onclick="showLoginForm('Civilian')">Civilian Login</button>
+</div>
+
+<div class="container" id="loginMETForm">
+  <input type="text" id="loginMETUsername" placeholder="Username">
+  <input type="password" id="loginMETPassword" placeholder="Password">
+  <input type="text" id="loginCollar" placeholder="Collar Number">
+  <button onclick="loginMET()">Login</button>
+  <p class="error" id="loginMETError"></p>
+</div>
+
+<div class="container" id="loginCivilForm" style="display:none;">
+  <input type="text" id="loginCivilUsername" placeholder="Username">
+  <input type="password" id="loginCivilPassword" placeholder="Password">
+  <button onclick="loginCivil()">Login</button>
+  <p class="error" id="loginCivilError"></p>
+</div>
+
 <div class="container">
-<h3>MET Login</h3>
-<input id="metUser" placeholder="Username">
-<input id="metPass" type="password" placeholder="Password">
-<input id="metCollar" placeholder="Collar Number">
-<button onclick="loginMET()">Login</button>
-
-<hr>
-
-<h3>Civilian Login</h3>
-<input id="civUser" placeholder="Username">
-<input id="civPass" type="password" placeholder="Password">
-<button onclick="loginCivil()">Login</button>
-
-<p id="error" class="error"></p>
+  <h3>Register</h3>
+  <div id="regMET">
+    <input type="text" id="regMETUsername" placeholder="MET Username">
+    <input type="password" id="regMETPassword" placeholder="Password">
+    <input type="text" id="regMETCollar" placeholder="Collar Number">
+    <button onclick="registerMET()">Create MET Account</button>
+  </div>
+  <div id="regCivil" style="margin-top:10px;">
+    <input type="text" id="regCivilUsername" placeholder="Civilian Username">
+    <input type="password" id="regCivilPassword" placeholder="Password">
+    <button onclick="registerCivil()">Create Civilian Account</button>
+  </div>
+  <p class="error" id="regError"></p>
+  <p class="success" id="regSuccess"></p>
 </div>
 
 <script>
-const API = "/api/storage";
+function getUsers(){ return JSON.parse(localStorage.getItem('users'))||{}; }
+function saveUsers(users){ localStorage.setItem('users', JSON.stringify(users)); }
 
-async function getUsers(){
-  const res = await fetch(API + "?key=users");
-  const data = await res.json();
-  return data.value || {};
+let currentTab='MET';
+function showLoginForm(tab){
+  currentTab=tab;
+  document.getElementById('loginMETForm').style.display = (tab==='MET')?'block':'none';
+  document.getElementById('loginCivilForm').style.display = (tab==='Civilian')?'block':'none';
+  document.getElementById('tabMET').classList.toggle('active', tab==='MET');
+  document.getElementById('tabCivil').classList.toggle('active', tab==='Civilian');
 }
 
-async function loginMET(){
-  const u = metUser.value.trim();
-  const p = metPass.value;
-  const c = metCollar.value.trim();
-
-  const users = await getUsers();
-
-  if(!users[u] || users[u].password !== p || users[u].type !== "MET" || users[u].collar !== c){
-    error.innerText = "Invalid MET login";
-    return;
-  }
-
-  localStorage.setItem("currentUser", JSON.stringify({username:u,type:"MET"}));
-  window.location.href = "dashboard.html";
+// ===== LOGIN =====
+function loginMET(){
+  const u=document.getElementById('loginMETUsername').value.trim();
+  const p=document.getElementById('loginMETPassword').value;
+  const c=document.getElementById('loginCollar').value.trim();
+  const users=getUsers();
+  const err=document.getElementById('loginMETError'); err.innerText='';
+  if(!users[u]){ err.innerText='Username does not exist'; return; }
+  const user=users[u];
+  if(user.type!=='MET'){ err.innerText='Not a MET account'; return; }
+  if(user.password!==p){ err.innerText='Incorrect password'; return; }
+  if(user.collar!==c){ err.innerText='Invalid collar number'; return; }
+  localStorage.setItem('currentUser', JSON.stringify({username:u,type:'MET'}));
+  window.location.href='dashboard.html';
 }
 
-async function loginCivil(){
-  const u = civUser.value.trim();
-  const p = civPass.value;
+function loginCivil(){
+  const u=document.getElementById('loginCivilUsername').value.trim();
+  const p=document.getElementById('loginCivilPassword').value;
+  const users=getUsers();
+  const err=document.getElementById('loginCivilError'); err.innerText='';
+  if(!users[u]){ err.innerText='Username does not exist'; return; }
+  const user=users[u];
+  if(user.type!=='Civilian'){ err.innerText='Not a Civilian account'; return; }
+  if(user.password!==p){ err.innerText='Incorrect password'; return; }
+  localStorage.setItem('currentUser', JSON.stringify({username:u,type:'Civilian'}));
+  window.location.href='dashboard.html';
+}
 
-  const users = await getUsers();
+// ===== REGISTER =====
+function registerMET(){
+  const u=document.getElementById('regMETUsername').value.trim();
+  const p=document.getElementById('regMETPassword').value;
+  const c=document.getElementById('regMETCollar').value.trim();
+  const users=getUsers();
+  const err=document.getElementById('regError'); const success=document.getElementById('regSuccess'); err.innerText=''; success.innerText='';
+  if(!u||!p||!c){ err.innerText='All fields required'; return; }
+  if(users[u]){ err.innerText='Username exists'; return; }
+  users[u]={password:p,type:'MET',collar:c,reports:[],vehicles:[],people:[],OCs:[],calls:[]};
+  saveUsers(users); success.innerText='MET account created! Login now.';
+}
 
-  if(!users[u] || users[u].password !== p || users[u].type !== "Civilian"){
-    error.innerText = "Invalid Civilian login";
-    return;
-  }
-
-  localStorage.setItem("currentUser", JSON.stringify({username:u,type:"Civilian"}));
-  window.location.href = "dashboard.html";
+function registerCivil(){
+  const u=document.getElementById('regCivilUsername').value.trim();
+  const p=document.getElementById('regCivilPassword').value;
+  const users=getUsers();
+  const err=document.getElementById('regError'); const success=document.getElementById('regSuccess'); err.innerText=''; success.innerText='';
+  if(!u||!p){ err.innerText='All fields required'; return; }
+  if(users[u]){ err.innerText='Username exists'; return; }
+  users[u]={password:p,type:'Civilian',reports:[],vehicles:[],people:[],OCs:[],calls:[]};
+  saveUsers(users); success.innerText='Civilian account created! Login now.';
 }
 </script>
 
