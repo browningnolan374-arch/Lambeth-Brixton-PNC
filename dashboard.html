@@ -5,22 +5,23 @@
 <title>Lambeth PNC</title>
 
 <style>
-body { margin:0; font-family:Arial; background:#121212; color:#eee; }
+body { margin:0; font-family:Arial; background:#0e0e0e; color:#eee; }
 
 header {
-  background:#0b3d91;
+  background:#184a9c;
   padding:15px;
   text-align:center;
-  font-size:24px;
+  font-size:26px;
+  font-weight:bold;
 }
 
-/* MET NAV */
+/* NAV (MET ONLY) */
 nav {
   display:flex;
   justify-content:center;
-  gap:10px;
   background:#0a2c70;
   padding:10px;
+  gap:10px;
 }
 
 nav button {
@@ -35,9 +36,16 @@ nav button {
 /* SECTIONS */
 .section { display:none; padding:20px; }
 
+h2 {
+  background:#184a9c;
+  padding:10px;
+  border-radius:4px;
+}
+
 input {
   padding:8px;
   margin:5px;
+  width:200px;
   background:#2b2b2b;
   border:none;
   color:white;
@@ -45,26 +53,42 @@ input {
 
 button {
   padding:8px 12px;
-  background:#0b3d91;
-  border:none;
-  color:white;
   cursor:pointer;
+  border:none;
+  background:#184a9c;
+  color:white;
+  border-radius:4px;
 }
 
+button.deleteBtn {
+  background:#e53935;
+}
+
+/* CARD */
 .card {
   background:#1e1e1e;
-  padding:10px;
+  border-left:4px solid #184a9c;
+  padding:12px;
   margin-top:10px;
-  border-left:4px solid #0b3d91;
+  border-radius:6px;
 }
 
 /* CIV UI */
 .civilBox {
-  padding:20px;
+  background:#1b1b1b;
+  padding:15px;
+  border-radius:6px;
+  margin:20px;
+}
+
+.civilTabs {
+  display:flex;
+  gap:10px;
+  flex-wrap:wrap;
 }
 
 .civilTabs button {
-  margin:5px;
+  background:#1a4dab;
 }
 
 </style>
@@ -76,29 +100,34 @@ button {
 
 <!-- MET NAV -->
 <nav id="metNav">
-<button onclick="showSection('lookup')">Lookup</button>
-<button onclick="showSection('vehicles')">Vehicles</button>
+<button onclick="showSection('lookup')">PNC Lookup</button>
+<button onclick="showSection('vehicles')">Vehicle Lookup</button>
 <button onclick="showSection('warrants')">Warrants</button>
 <button onclick="logout()">Logout</button>
 </nav>
 
-<!-- MET SYSTEM -->
+<!-- MET SECTIONS -->
+
 <div id="lookup" class="section">
-<input id="searchName" placeholder="Name">
+<h2>Person Lookup</h2>
+<input id="searchName" placeholder="Enter Name">
 <button onclick="searchPerson()">Search</button>
 <div id="personResult"></div>
 </div>
 
 <div id="vehicles" class="section">
-<input id="searchPlate" placeholder="Plate">
+<h2>Vehicle Lookup</h2>
+<input id="searchPlate" placeholder="Enter Plate">
 <button onclick="searchVehicle()">Search</button>
 <div id="vehicleResult"></div>
 </div>
 
 <div id="warrants" class="section">
 <h2>Warrants</h2>
+
 <div id="warrantList"></div>
 
+<h3>Create Warrant</h3>
 <input id="warrantName" placeholder="Name">
 <input id="warrantReason" placeholder="Reason">
 <button onclick="createWarrant()">Create</button>
@@ -110,26 +139,23 @@ button {
 <div class="civilBox">
 
 <div class="civilTabs">
-<button onclick="showCivilTab('list')">OCs</button>
-<button onclick="showCivilTab('create')">Create OC</button>
-<button onclick="logout()">Logout</button>
+<button>OCs</button>
+<button>Reports</button>
+<button>Vehicles</button>
+<button>Personal Info</button>
+<button>Convictions</button>
+<button>Arrests</button>
+<button>Warnings</button>
 </div>
 
-<!-- OC LIST -->
-<div id="listTab" class="civilSection">
+<div style="margin-top:15px;">
+<label>Select OC:</label>
 <select id="ocSelect"></select>
-<div id="civilContent"></div>
+<button onclick="createOC()">Add New OC</button>
+<button onclick="logout()" style="background:#e53935;">Logout</button>
 </div>
 
-<!-- OC CREATE -->
-<div id="createTab" class="civilSection" style="display:none;">
-<input id="ocName" placeholder="Name"><br>
-<input id="ocBirthday" type="date"><br>
-<input id="ocAddress" placeholder="Address"><br>
-<input id="ocGender" placeholder="Gender"><br>
-<input id="ocMarks" placeholder="Marks"><br>
-<button onclick="createOC()">Create</button>
-</div>
+<div id="civilContent"></div>
 
 </div>
 </div>
@@ -137,42 +163,43 @@ button {
 <script>
 const API = "/api/storage";
 
-let user = JSON.parse(localStorage.getItem("currentUser"));
-if(!user) location.href="index.html";
+let currentUser = JSON.parse(localStorage.getItem("currentUser"));
+
+if(!currentUser){
+  window.location.href = "index.html";
+}
 
 //////////////////////////////////////////////////
 // STORAGE
 //////////////////////////////////////////////////
 
-async function getData(k){
-  const r = await fetch(API+"?key="+k);
-  const d = await r.json();
-  return d.value||[];
+async function getData(key){
+  const res = await fetch(API + "?key=" + key);
+  const data = await res.json();
+  return data.value ?? null;
 }
 
-async function saveData(k,v){
+async function saveData(key, value){
   await fetch(API,{
     method:"POST",
     headers:{"Content-Type":"application/json"},
-    body:JSON.stringify({key:k,value:v})
+    body:JSON.stringify({key,value})
   });
 }
 
 //////////////////////////////////////////////////
-// INIT (THIS FIXES EVERYTHING)
+// INIT (FIXES BUTTONS)
 //////////////////////////////////////////////////
 
 document.addEventListener("DOMContentLoaded", () => {
 
-  if(user.type === "MET"){
-    metNav.style.display = "flex";
+  if(currentUser.type === "Civilian"){
+    document.getElementById("metNav").style.display = "none";
+    document.getElementById("civilianUI").style.display = "block";
+    loadCivilianOCs();
+  } else {
     showSection("lookup");
     loadWarrants();
-  } else {
-    metNav.style.display = "none";
-    civilianUI.style.display = "block";
-    loadCivil();
-    showCivilTab("list");
   }
 
 });
@@ -188,141 +215,188 @@ function showSection(id){
 
 function logout(){
   localStorage.removeItem("currentUser");
-  location.href="index.html";
+  window.location.href = "index.html";
 }
 
 //////////////////////////////////////////////////
-// MET SYSTEM
+// PERSON SEARCH
 //////////////////////////////////////////////////
 
 async function searchPerson(){
+  const name = document.getElementById("searchName").value.toLowerCase();
   let OCs = await getData("OCs");
-  const name = searchName.value.toLowerCase();
 
-  const found = OCs.filter(o=>o.name.toLowerCase().includes(name));
+  if(!Array.isArray(OCs)) OCs = [];
 
-  personResult.innerHTML="";
+  const box = document.getElementById("personResult");
+  box.innerHTML = "";
+
+  const found = OCs.filter(o => o.name.toLowerCase().includes(name));
+
+  if(found.length === 0){
+    box.innerHTML = "No record found";
+    return;
+  }
+
   found.forEach(o=>{
-    personResult.innerHTML+=`
+    box.innerHTML += `
     <div class="card">
-    ${o.name}<br>${o.address}
-    <button onclick="quickWarrant('${o.name}')">Warrant</button>
+      <h3>${o.name}</h3>
+      <p>DOB: ${o.birthday}</p>
+      <p>Address: ${o.address}</p>
+      <p>Marks: ${o.marks}</p>
+      <button onclick="quickWarrant('${o.name}')">Add Warrant</button>
     </div>`;
   });
 }
 
+//////////////////////////////////////////////////
+// VEHICLE SEARCH
+//////////////////////////////////////////////////
+
 async function searchVehicle(){
+  const plate = document.getElementById("searchPlate").value.toLowerCase();
   let users = await getData("users");
-  let found=null;
+
+  if(!users) users = {};
+
+  let found = null;
 
   for(const u in users){
-    (users[u].vehicles||[]).forEach(v=>{
-      if(v.plate===searchPlate.value) found=v;
+    (users[u].vehicles || []).forEach(v=>{
+      if(v.plate.toLowerCase() === plate){
+        found = v;
+      }
     });
   }
 
-  vehicleResult.innerHTML = found ?
-  `<div class="card">${found.plate} - ${found.reason}</div>` :
-  "Not found";
+  const box = document.getElementById("vehicleResult");
+
+  if(!found){
+    box.innerHTML = "No vehicle found";
+    return;
+  }
+
+  box.innerHTML = `
+  <div class="card">
+    <h3>${found.plate}</h3>
+    <p>Colour: ${found.colour}</p>
+    <p>Reason: ${found.reason}</p>
+  </div>`;
 }
 
-async function createWarrant(){
-  let w = await getData("warrants");
+//////////////////////////////////////////////////
+// WARRANTS
+//////////////////////////////////////////////////
 
-  w.push({
-    name:warrantName.value,
-    reason:warrantReason.value,
-    officer:user.username
+async function createWarrant(){
+  const name = document.getElementById("warrantName").value;
+  const reason = document.getElementById("warrantReason").value;
+
+  if(!name || !reason){
+    alert("Fill fields");
+    return;
+  }
+
+  let warrants = await getData("warrants");
+  if(!Array.isArray(warrants)) warrants = [];
+
+  warrants.push({
+    name,
+    reason,
+    officer: currentUser.username,
+    date: new Date().toLocaleString()
   });
 
-  await saveData("warrants",w);
+  await saveData("warrants", warrants);
   loadWarrants();
 }
 
-async function loadWarrants(){
-  let w = await getData("warrants");
+function quickWarrant(name){
+  document.getElementById("warrantName").value = name;
+  showSection("warrants");
+}
 
-  warrantList.innerHTML="";
-  w.forEach((x,i)=>{
-    warrantList.innerHTML+=`
+async function loadWarrants(){
+  let warrants = await getData("warrants");
+  if(!Array.isArray(warrants)) warrants = [];
+
+  const list = document.getElementById("warrantList");
+  list.innerHTML = "";
+
+  warrants.forEach((w,i)=>{
+    list.innerHTML += `
     <div class="card">
-    ${x.name} - ${x.reason}
-    <button onclick="deleteWarrant(${i})">Delete</button>
+      <h3>${w.name}</h3>
+      <p>${w.reason}</p>
+      <p>${w.officer}</p>
+      <p>${w.date}</p>
+      <button class="deleteBtn" onclick="deleteWarrant(${i})">Delete</button>
     </div>`;
   });
 }
 
 async function deleteWarrant(i){
-  let w = await getData("warrants");
-  w.splice(i,1);
-  await saveData("warrants",w);
+  let warrants = await getData("warrants");
+  if(!Array.isArray(warrants)) return;
+
+  warrants.splice(i,1);
+  await saveData("warrants", warrants);
+
   loadWarrants();
 }
 
-function quickWarrant(name){
-  warrantName.value = name;
-  showSection("warrants");
-}
-
 //////////////////////////////////////////////////
-// CIV SYSTEM
+// CIVILIAN
 //////////////////////////////////////////////////
 
-function showCivilTab(tab){
-  document.querySelectorAll(".civilSection").forEach(s=>s.style.display="none");
-
-  if(tab==="list") listTab.style.display="block";
-  if(tab==="create") createTab.style.display="block";
-}
-
-async function loadCivil(){
+async function loadCivilianOCs(){
   let OCs = await getData("OCs");
-  let mine = OCs.filter(o=>o.createdBy===user.username);
+  if(!Array.isArray(OCs)) OCs = [];
 
-  ocSelect.innerHTML="";
+  const select = document.getElementById("ocSelect");
+  select.innerHTML = "";
+
+  const mine = OCs.filter(o=>o.createdBy===currentUser.username);
+
   mine.forEach((o,i)=>{
-    ocSelect.innerHTML+=`<option value="${i}">${o.name}</option>`;
+    select.innerHTML += `<option value="${i}">${o.name}</option>`;
   });
 
-  ocSelect.onchange = ()=>showCivil(mine[ocSelect.value]);
+  select.onchange = () => showCivilOC(mine[select.value]);
 
-  if(mine.length) showCivil(mine[0]);
+  if(mine.length) showCivilOC(mine[0]);
 }
 
-function showCivil(o){
-  civilContent.innerHTML=`
+function showCivilOC(oc){
+  document.getElementById("civilContent").innerHTML = `
   <div class="card">
-  ${o.name}<br>
-  DOB: ${o.birthday}<br>
-  Address: ${o.address}<br>
-  Gender: ${o.gender}<br>
-  Marks: ${o.marks}
+    <h3>${oc.name}</h3>
+    <p>DOB: ${oc.birthday}</p>
+    <p>Address: ${oc.address}</p>
+    <p>Gender: ${oc.gender}</p>
+    <p>Marks: ${oc.marks}</p>
   </div>`;
 }
 
 async function createOC(){
   let OCs = await getData("OCs");
+  if(!Array.isArray(OCs)) OCs = [];
 
-  const oc = {
-    name:ocName.value,
-    birthday:ocBirthday.value,
-    address:ocAddress.value,
-    gender:ocGender.value,
-    marks:ocMarks.value,
-    createdBy:user.username
-  };
+  const name = prompt("Name?");
+  if(!name) return;
 
-  if(!oc.name || !oc.birthday){
-    alert("Fill required fields");
-    return;
-  }
+  OCs.push({
+    name,
+    birthday:"N/A",
+    address:"N/A",
+    gender:"N/A",
+    marks:"None",
+    createdBy: currentUser.username
+  });
 
-  OCs.push(oc);
-  await saveData("OCs",OCs);
-
-  alert("Created");
-  loadCivil();
-  showCivilTab("list");
+  await saveData("OCs", OCs);
+  loadCivilianOCs();
 }
 </script>
 
