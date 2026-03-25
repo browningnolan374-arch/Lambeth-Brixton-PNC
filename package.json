@@ -1,4 +1,3 @@
-{
   "name": "lambeth-pnc",
   "version": "1.0.0",
   "description": "PNC Dashboard for Lambeth RP",
@@ -14,4 +13,3 @@
   "keywords": [],
   "author": "YourName",
   "license": "MIT"
-}
