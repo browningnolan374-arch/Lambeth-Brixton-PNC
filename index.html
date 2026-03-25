@@ -140,7 +140,10 @@ button.deleteBtn { background:#f44336; color:white; }
 // ===== LocalStorage Helpers =====
 function getUsers(){return JSON.parse(localStorage.getItem('users'))||{}}
 function saveUsers(users){localStorage.setItem('users',JSON.stringify(users))}
-let currentUser = JSON.parse(localStorage.getItem('currentUser'))||null;
+
+// ===== Init currentUser =====
+let storedUser = localStorage.getItem('currentUser');
+let currentUser = storedUser ? JSON.parse(storedUser) : null;
 
 // ===== Show Pages =====
 function showLogin(){document.getElementById('loginPage').classList.remove('section');document.getElementById('registerPage').classList.add('section');}
@@ -174,16 +177,22 @@ function registerCivil(){
 
 // ===== Login =====
 function login(){
-  const u=document.getElementById('loginUsername').value.trim();
-  const p=document.getElementById('loginPassword').value;
-  const role=document.getElementById('loginRole').value;
-  const c=document.getElementById('loginCollar').value.trim();
-  const users=getUsers();
-  if(users[u]&&users[u].password===p&&users[u].type===role){
-    if(role==='MET' && users[u].collar!==c){document.getElementById('loginError').innerText='Invalid collar number'; return;}
-    currentUser={username:u,type:role}; localStorage.setItem('currentUser',JSON.stringify(currentUser));
-    openDashboard(); document.getElementById('loginError').innerText='';
-  }else{document.getElementById('loginError').innerText='Invalid credentials';}
+  const u = document.getElementById('loginUsername').value.trim();
+  const p = document.getElementById('loginPassword').value;
+  const role = document.getElementById('loginRole').value;
+  const c = document.getElementById('loginCollar').value.trim();
+  const users = getUsers();
+
+  if(users[u] && users[u].password === p && users[u].type === role){
+    if(role === 'MET' && users[u].collar !== c){
+      document.getElementById('loginError').innerText = 'Invalid collar number';
+      return;
+    }
+    currentUser = {username: u, type: role};
+    localStorage.setItem('currentUser', JSON.stringify(currentUser));
+    openDashboard();
+    document.getElementById('loginError').innerText = '';
+  } else {document.getElementById('loginError').innerText = 'Invalid credentials';}
 }
 
 // ===== Dashboard =====
@@ -191,7 +200,10 @@ function openDashboard(){
   document.getElementById('loginPage').classList.add('section');
   document.getElementById('registerPage').classList.add('section');
   document.getElementById('dashboardPage').classList.remove('section');
+
+  if(typeof currentUser === 'string') currentUser = JSON.parse(currentUser);
   loadAllTables();
+
   if(currentUser.type==='Civilian'){
     document.getElementById('ocForm').style.display='block';
     document.getElementById('callForm').style.display='block';
@@ -202,22 +214,26 @@ function openDashboard(){
     document.getElementById('callDashboard').style.display='block';
     loadCalls();
   }
+  showSection(currentUser.type==='Civilian'?'ocForm':'reports');
 }
 
-function logout(){currentUser=null; localStorage.removeItem('currentUser');showLogin();}
-function showSection(name){document.querySelectorAll('.section.panel').forEach(s=>s.style.display='none');document.getElementById(name).style.display='block';}
+function logout(){
+  currentUser=null;
+  localStorage.removeItem('currentUser');
+  showLogin();
+}
 
-// ===== Reports/Vehicles/People Helpers =====
+// ===== Data Helpers =====
 function getData(type){const users=getUsers();return currentUser&&users[currentUser.username]?users[currentUser.username][type]:[];}
 function saveData(type,data){const users=getUsers();if(currentUser){users[currentUser.username][type]=data;saveUsers(users);}}
 
-// Load tables
+// ===== Load Tables =====
 function loadReports(){const r=getData('reports');const t=document.getElementById('reportsTable');t.innerHTML='<tr><th>ID</th><th>Description</th><th>Actions</th></tr>';r.forEach((v,i)=>{const row=t.insertRow();row.insertCell(0).innerText=i+1;row.insertCell(1).innerText=v;row.insertCell(2).innerHTML=`<button class="editBtn" onclick="editReport(${i})">Edit</button> <button class="deleteBtn" onclick="deleteReport(${i})">Delete</button>`;});}
 function loadVehicles(){const r=getData('vehicles');const t=document.getElementById('vehiclesTable');t.innerHTML='<tr><th>ID</th><th>Colour</th><th>Plate</th><th>Brand</th><th>Actions</th></tr>';r.forEach((v,i)=>{const row=t.insertRow();row.insertCell(0).innerText=i+1;row.insertCell(1).innerText=v.colour;row.insertCell(2).innerText=v.plate;row.insertCell(3).innerText=v.brand;row.insertCell(4).innerHTML=`<button class="editBtn" onclick="editVehicle(${i})">Edit</button> <button class="deleteBtn" onclick="deleteVehicle(${i})">Delete</button>`;});}
 function loadPeople(){const r=getData('people');const t=document.getElementById('peopleTable');t.innerHTML='<tr><th>ID</th><th>Name</th><th>Actions</th></tr>';r.forEach((v,i)=>{const row=t.insertRow();row.insertCell(0).innerText=i+1;row.insertCell(1).innerText=v;row.insertCell(2).innerHTML=`<button class="editBtn" onclick="editPerson(${i})">Edit</button> <button class="deleteBtn" onclick="deletePerson(${i})">Delete</button>`;});}
 function loadAllTables(){loadReports();loadVehicles();loadPeople();}
 
-// Add/Edit/Delete
+// ===== Reports/Vehicles/People CRUD =====
 function addReport(){const v=document.getElementById('reportInput').value;if(!v)return;const d=getData('reports');d.push(v);saveData('reports',d);document.getElementById('reportInput').value='';loadReports();}
 function editReport(i){const d=getData('reports');const v=prompt("Edit report:",d[i]);if(v!==null){d[i]=v;saveData('reports',d);loadReports();}}
 function deleteReport(i){const d=getData('reports');if(confirm("Delete this report?")){d.splice(i,1);saveData('reports',d);loadReports();}}
@@ -244,5 +260,4 @@ function createOC(){
     marks:document.getElementById('ocMarks').value
   });
   saveUsers(users);
-  alert('OC Created!');
-  document.getElementById('ocName').value='';document.getElementById('ocBirthday').value='';document.getElementById('ocAddress').value='';document.getElementById('ocGender').value='';
+  alert('
